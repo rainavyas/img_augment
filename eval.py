@@ -24,7 +24,7 @@ if __name__ == "__main__":
     args = commandLineParser.parse_args()
 
     # Assume num seeds is one in this script
-    model_paths = [f'{args.model_path_base}{i}.th' for i in range(args.num_seeds)]
+    model_paths = [f'{args.model_path_base}{i}.th' for i in range(1, args.num_seeds+1)]
 
     # Save the command run
     if not os.path.isdir('CMDs'):

@@ -39,7 +39,7 @@ if __name__ == "__main__":
         device = get_default_device()
 
     # Load the test data
-    ds = data_sel(args.data_name, args.data_dir_path, train=False)
+    ds = data_sel(args, train=False)
     dl = torch.utils.data.DataLoader(ds, batch_size=args.bs, shuffle=False)
 
     # Load model

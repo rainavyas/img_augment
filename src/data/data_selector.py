@@ -60,9 +60,11 @@ def test_selector(args):
         all_corr.append(np.load(os.path.join(corr_path, 'zoom_blur.npy')))
         labels = np.load(os.path.join(corr_path, 'labels.npy'))
 
+        all_corr = torch.from_numpy(np.array(all_corr))
+        labels = torch.LongTensor(labels)
+
         corr = args.domain
         for i in range(19):
-            import pdb; pdb.set_trace()
             curr_corr_dset = TensorDataset(all_corr[i][ (corr-1)*10000 : corr*10000], labels[(corr-1)*10000 : corr*10000] )
             if i == 0:
                 all_corr_dset = curr_corr_dset

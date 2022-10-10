@@ -53,4 +53,4 @@ if __name__ == "__main__":
         acc_mean = mean(accs)
         acc_std = stdev(accs)
         out_str = f'{len(model_paths)} models\nOverall {acc_mean:.3f}+-{acc_std:.3f}'
-    print(out_str)
+        print(out_str)

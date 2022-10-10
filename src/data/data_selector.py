@@ -71,24 +71,24 @@ def test_selector(args):
             else: 
                 all_corr_dset = ConcatDataset((all_corr_dset, curr_corr_dset))
             
-        # Apply Transforms to the datasets
-        xs = []
-        ys = []
-        for i in range(len(all_corr_dset)):
-            import pdb; pdb.set_trace()
-            x, y = all_corr_dset[i]
-            x = torch.permute(x, (2,0,1))
-            T = transforms.Normalize(
-                        mean=[0.4914, 0.4822, 0.4465],
-                        std=[0.2023, 0.1994, 0.2010])
-            x = T(x)
-            xs.append(x)
-            ys.append(y)
+        # # Apply Transforms to the datasets
+        # xs = []
+        # ys = []
+        # for i in range(len(all_corr_dset)):
+        #     import pdb; pdb.set_trace()
+        #     x, y = all_corr_dset[i]
+        #     x = torch.permute(x, (2,0,1))
+        #     T = transforms.Normalize(
+        #                 mean=[0.4914, 0.4822, 0.4465],
+        #                 std=[0.2023, 0.1994, 0.2010])
+        #     x = T(x)
+        #     xs.append(x)
+        #     ys.append(y)
             
 
-        xs = torch.stack(xs, dim=0)
-        ys = torch.stack(ys, dim=0)
-        all_corr_dset = TensorDataset(xs, ys)
+        # xs = torch.stack(xs, dim=0)
+        # ys = torch.stack(ys, dim=0)
+        # all_corr_dset = TensorDataset(xs, ys)
 
 
         return all_corr_dset

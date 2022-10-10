@@ -60,7 +60,7 @@ def test_selector(args):
         all_corr.append(np.load(os.path.join(corr_path, 'zoom_blur.npy')))
         labels = np.load(os.path.join(corr_path, 'labels.npy'))
 
-        all_corr = torch.FloatTensor(torch.from_numpy(np.array(all_corr)))
+        all_corr = torch.from_numpy(np.array(all_corr), dtype=torch.float)
         labels = torch.LongTensor(labels)
 
         corr = args.domain

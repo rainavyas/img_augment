@@ -49,8 +49,8 @@ if __name__ == "__main__":
     criterion = nn.CrossEntropyLoss().to(device)
     accs = ens_model.eval(dl, criterion, device)
 
-    if len(args.model_paths) > 1:
+    if len(model_paths) > 1:
         acc_mean = mean(accs)
         acc_std = stdev(accs)
-        out_str = f'{len(args.model_paths)} models\nOverall {acc_mean:.3f}+-{acc_std:.3f}'
+        out_str = f'{len(model_paths)} models\nOverall {acc_mean:.3f}+-{acc_std:.3f}'
     print(out_str)

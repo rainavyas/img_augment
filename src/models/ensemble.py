@@ -9,13 +9,13 @@ class Ensemble():
             model.to(device)
             self.models.append(model)
 
-    def eval(self, dl, criterion, device, wandb_log=False):
+    def eval(self, dl, criterion, device):
         '''
         Evaluate Ensemble predictions
         Returns list of accuracies
         '''
         accs = []
         for m in self.models:
-            acc = Trainer.eval(dl, m, criterion, device, wandb_log=wandb_log)
+            acc = Trainer.eval(dl, m, criterion, device)
             accs.append(acc)
         return accs

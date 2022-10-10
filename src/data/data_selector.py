@@ -12,10 +12,10 @@ def data_sel(args, train=True):
 
 def train_selector(args, val=0.2):
     ds = tv.datasets.CIFAR10(root=args.data_dir_path, train=True, transform=transforms.Compose([
-                    tv.transforms.RandomCrop(size=32, padding=4),
-                    tv.transforms.RandomHorizontalFlip(),
-                    tv.transforms.ToTensor(),
-                    tv.transforms.Normalize(
+                    transforms.RandomCrop(size=32, padding=4),
+                    transforms.RandomHorizontalFlip(),
+                    transforms.ToTensor(),
+                    transforms.Normalize(
                         mean=[0.4914, 0.4822, 0.4465],
                         std=[0.2023, 0.1994, 0.2010], 
                         ),
@@ -30,8 +30,8 @@ def test_selector(args):
     corr_path = os.path.join(args.data_dir_path, 'CIFAR-10-C')
     if args.domain == 0:
         test_ds = tv.datasets.CIFAR10(root=args.data_dir_path, train=False, transform=transforms.Compose([
-                    tv.transforms.ToTensor(),
-                    tv.transforms.Normalize(
+                    transforms.ToTensor(),
+                    transforms.Normalize(
                         mean=[0.4914, 0.4822, 0.4465],
                         std=[0.2023, 0.1994, 0.2010], 
                         ),
@@ -73,7 +73,13 @@ def test_selector(args):
         ys = []
         for i in range(len(all_corr_dset)):
             x, y = all_corr_dset[i]
-            # do all my transforms here
+            T = transforms.Normalize(
+                        mean=[0.4914, 0.4822, 0.4465],
+                        std=[0.2023, 0.1994, 0.2010])
+            x = T(x)
+            xs.append(x)
+            ys.append(y)
+            
 
         xs = torch.stack(xs, dim=0)
         ys = torch.stack(ys, dim=0)

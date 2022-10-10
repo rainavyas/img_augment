@@ -62,6 +62,7 @@ def test_selector(args):
 
         corr = args.domain
         for i in range(19):
+            import pdb; pdb.set_trace()
             curr_corr_dset = TensorDataset(all_corr[i][ (corr-1)*10000 : corr*10000], labels[(corr-1)*10000 : corr*10000] )
             if i == 0:
                 all_corr_dset = curr_corr_dset

@@ -69,7 +69,7 @@ def test_selector(args):
             if i == 0:
                 all_corr_dset = curr_corr_dset
             else: 
-                all_corr_dset = ConcatDataset(all_corr_dset, curr_corr_dset)
+                all_corr_dset = ConcatDataset((all_corr_dset, curr_corr_dset))
             
         # Apply Transforms to the datasets
         xs = []

@@ -1,6 +1,8 @@
 import torch, os
 import numpy as np 
 import torchvision as tv
+import torchvision.transforms as transforms
+from torch.utils.data import TensorDataset, ConcatDataset
 
 def data_sel(args, train=True):
     if train ==True: return train_selector(args)
@@ -8,19 +10,26 @@ def data_sel(args, train=True):
 
 
 def train_selector(args):
-    cifar_path = os.path.join(self.root, 'cifar-10-batches-py')
-    if not os.path.isdir(cifar_path):
-        train_ds = tv.datasets.CIFAR10(root = cifar_path, download = True)
-    else:
-        train_ds = tv.datasets.CIFAR10(root = cifar_path, download = False)
-    
-    return train_ds
+    return tv.datasets.CIFAR10(root=args.data_dir_path, train=True, transform=transforms.Compose([
+                    tv.transforms.RandomCrop(size=32, padding=4),
+                    tv.transforms.RandomHorizontalFlip(),
+                    tv.transforms.ToTensor(),
+                    tv.transforms.Normalize(
+                        mean=[0.4914, 0.4822, 0.4465],
+                        std=[0.2023, 0.1994, 0.2010], 
+                        ),
+                    ]), download=True)
 
 def test_selector(args):
-    cifar_path = os.path.join(self.root, 'cifar-10-batches-py')
-    corr_path = os.path.join(self.root, 'CIFAR-10-C')
+    corr_path = os.path.join(args.data_dir_path, 'CIFAR-10-C')
     if args.domain == 0:
-        test_ds = torchvision.datasets.CIFAR10(root = cifar_path, train=False)
+        test_ds = tv.datasets.CIFAR10(root=args.data_dir_path, train=False, transform=transforms.Compose([
+                    tv.transforms.ToTensor(),
+                    tv.transforms.Normalize(
+                        mean=[0.4914, 0.4822, 0.4465],
+                        std=[0.2023, 0.1994, 0.2010], 
+                        ),
+                    ]), download=True)
         return test_ds
     else:
         all_corr = []
@@ -45,14 +54,26 @@ def test_selector(args):
         all_corr.append(np.load(os.path.join(corr_path, 'zoom_blur.npy')))
         labels = np.load(os.path.join(corr_path, 'labels.npy'))
 
-        all_corr_x = []
         corr = args.domain
         for i in range(19):
-            if i = 0:
-                all_corr_dset = torch.utils.data.TensorDataset(all_corr[i][ (corr-1)*10000 : corr*10000], labels[(corr-1)*10000 : corr*10000] )
+            curr_corr_dset = ensorDataset(all_corr[i][ (corr-1)*10000 : corr*10000], labels[(corr-1)*10000 : corr*10000] )
+            if i == 0:
+                all_corr_dset = curr_corr_dset
             else: 
-                curr_corr_dset = torch.utils.data.TensorDataset(all_corr[i][ (corr-1)*10000 : corr*10000], labels[(corr-1)*10000 : corr*10000] )
-                all_corr_dset = torch.utils.data.ConcatDataset(all_corr_dset, curr_corr_dset)
+                all_corr_dset = ConcatDataset(all_corr_dset, curr_corr_dset)
+            
+        # Apply Transforms to the datasets
+        xs = []
+        ys = []
+        for i in range(len(all_corr_dset)):
+            x, y = all_corr_dset[i]
+            # do all my transforms here
+
+        xs = torch.stack(xs, dim=0)
+        ys = torch.stack(ys, dim=0)
+        all_corr_dset = TensorDataset(xs, ys)
+
+
         return all_corr_dset
 
 

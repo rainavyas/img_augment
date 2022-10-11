@@ -24,6 +24,7 @@ if __name__ == "__main__":
     commandLineParser.add_argument('--sch', type=int, default=[100, 150], nargs='+', help="Specify scheduler cycle")
     commandLineParser.add_argument('--seed', type=int, default=1, help="Specify seed")
     commandLineParser.add_argument('--force_cpu', action='store_true', help='force cpu use')
+    commandLineParser.add_argument('--aug', action='store_true', help='use data augmentation')
     args = commandLineParser.parse_args()
 
     set_seeds(args.seed)

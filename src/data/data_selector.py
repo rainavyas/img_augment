@@ -1,4 +1,4 @@
-import torch, os
+import torch, os, pdb
 import numpy as np 
 import torchvision as tv
 import torchvision.transforms as transforms
@@ -20,7 +20,25 @@ def train_selector(args, val=0.2):
                         std=[0.2023, 0.1994, 0.2010], 
                         ),
                     ]), download=True)
-
+    
+    aug=args.aug
+    if aug == True:
+        for i in range(3):
+            aug_ds = tv.datasets.CIFAR10(root=args.data_dir_path, train=True, transform=transforms.Compose([
+                        transforms.AutoAugment(),
+                        transforms.RandomCrop(size=32, padding=4),
+                        transforms.RandomHorizontalFlip(),
+                        transforms.ToTensor(),
+                        transforms.Normalize(
+                            mean=[0.4914, 0.4822, 0.4465],
+                            std=[0.2023, 0.1994, 0.2010], 
+                            ),
+                        ]), download=True)
+            if i == 0:
+                full_ds = aug_ds
+            else: 
+                full_ds = ConcatDataset((full_ds, aug_ds))
+        ds = ConcatDataset((full_ds, ds))
     num_val = int(val*len(ds))
     num_train = len(ds) - num_val
     train_ds, val_ds = random_split(ds, [num_train, num_val], generator=torch.Generator().manual_seed(42))

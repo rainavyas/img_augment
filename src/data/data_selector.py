@@ -75,12 +75,13 @@ def test_selector(args):
         xs = []
         ys = []
         for i in range(len(all_corr_dset)):
+            import pdb; pdb.set_trace()
             x, y = all_corr_dset[i]
             x = torch.permute(x, (2,0,1))
-            T = transforms.Normalize(
-                        mean=[0.4914, 0.4822, 0.4465],
-                        std=[0.2023, 0.1994, 0.2010])
-            x = T(x)
+            # T = transforms.Normalize(
+            #             mean=[0.4914, 0.4822, 0.4465],
+            #             std=[0.2023, 0.1994, 0.2010])
+            # x = T(x)
             xs.append(x)
             ys.append(y)
             

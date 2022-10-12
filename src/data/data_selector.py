@@ -11,7 +11,7 @@ def data_sel(args, train=True):
 
 aug_transform = transforms.Compose([
                         transforms.AutoAugment(),
-                        transforms.RandomCrop(size=32, padding=4),
+                        # transforms.RandomCrop(size=32, padding=4),
                         transforms.RandomHorizontalFlip(),
                         transforms.ToTensor(),
                         transforms.Normalize(
@@ -20,7 +20,7 @@ aug_transform = transforms.Compose([
                             ),
                         ])
 train_transform = transforms.Compose([
-                    transforms.RandomCrop(size=32, padding=4),
+                    # transforms.RandomCrop(size=32, padding=4),
                     transforms.RandomHorizontalFlip(),
                     transforms.ToTensor(),
                     transforms.Normalize(
@@ -36,9 +36,9 @@ test_transform = transforms.Compose([
                         ),
                     ])
 
-grayscale_train_transform = transforms.Compose([
+grayscale_aug_transform = transforms.Compose([
                         transforms.AutoAugment(),
-                        transforms.RandomCrop(size=32, padding=4),
+                        # transforms.RandomCrop(size=32, padding=4),
                         transforms.RandomHorizontalFlip(),
                         transforms.Grayscale(3),
                         transforms.ToTensor(),
@@ -55,8 +55,8 @@ grayscale_test_transform = transforms.Compose([
                             std=[0.2023, 0.1994, 0.2010], 
                             ),
                         ])
-grayscale_aug_transform = transforms.Compose([
-                        transforms.RandomCrop(size=32, padding=4),
+grayscale_train_transform = transforms.Compose([
+                        # transforms.RandomCrop(size=32, padding=4),
                         transforms.RandomHorizontalFlip(),
                         transforms.Grayscale(3),
                         transforms.ToTensor(),
@@ -69,7 +69,6 @@ grayscale_aug_transform = transforms.Compose([
 def train_selector(args, val=0.2):
     if args.data_name =='cifar10':
         ds = tv.datasets.CIFAR10(root=args.data_dir_path, train=True, transform= train_transform, download = True)
-        
         if args.aug == True:
             for i in range(3):
                 aug_ds = tv.datasets.CIFAR10(root=args.data_dir_path, train=True, transform = aug_transform, download=True)
@@ -78,16 +77,20 @@ def train_selector(args, val=0.2):
                 else: 
                     full_ds = ConcatDataset((full_ds, aug_ds))
             ds = ConcatDataset((full_ds, ds))
+
+
     if args.data_name =='digits':
-        mnist_path = os.path.join(args.data_path_root, 'MNIST')
-        usps_path = os.path.join(args.data_path_root, 'usps.bz2')
-        svhn_path = os.path.join(args.data_path_root, 'train_32x32.mat')
-        if args.domain == 'mnist': return datasets.mnist.MNIST(args.data_path_root, train=True, download=True, transform = grayscale_train_transform)
-        elif args.domain == 'svhn': return datasets.svhn.SVHN(args.data_path_root, split='train', download=True, transform = train_transform)
-        elif args.domain == 'usps': return datasets.usps.USPS(args.data_path_root, train=True, download=True, transform = grayscale_train_transform)
+        mnist_path = os.path.join(args.data_dir_path, 'MNIST')
+        usps_path = os.path.join(args.data_dir_path, 'usps.bz2')
+        svhn_path = os.path.join(args.data_dir_path, 'train_32x32.mat')
+        if args.domain == 'mnist': ds = tv.datasets.mnist.MNIST(args.data_dir_path, train=True, download=True, transform = grayscale_train_transform)
+        elif args.domain == 'svhn': ds = tv.datasets.svhn.SVHN(args.data_dir_path, split='train', download=True, transform = train_transform)
+        elif args.domain == 'usps': ds = tv.datasets.usps.USPS(args.data_dir_path, train=True, download=True, transform = grayscale_train_transform)
         if args.aug == True:
             for i in range(3):
-                aug_ds = tv.datasets.CIFAR10(root=args.data_dir_path, train=True, transform = aug_transform, download=True)
+                if args.domain == 'mnist': aug_ds = tv.datasets.mnist.MNIST(args.data_dir_path, train=True, download=True, transform = grayscale_aug_transform)
+                elif args.domain == 'svhn': aug_ds = tv.datasets.svhn.SVHN(args.data_dir_path, split='train', download=True, transform = aug_transform)
+                elif args.domain == 'usps': aug_ds = tv.datasets.usps.USPS(args.data_dir_path, train=True, download=True, transform = grayscale_aug_transform)
                 if i == 0:
                     full_ds = aug_ds
                 else: 
@@ -99,6 +102,8 @@ def train_selector(args, val=0.2):
     num_val = int(val*len(ds))
     num_train = len(ds) - num_val
     train_ds, val_ds = random_split(ds, [num_train, num_val], generator=torch.Generator().manual_seed(42))
+    print("Train data size", len(train_ds))
+    print("Test data size", len(train_ds))
     return train_ds, val_ds
 
 def test_selector(args):

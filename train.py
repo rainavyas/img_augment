@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import sys
-import os
+import os, pdb
 import argparse
 from src.tools.tools import get_default_device, set_seeds
 from src.models.model_selector import model_sel
@@ -25,10 +25,11 @@ if __name__ == "__main__":
     commandLineParser.add_argument('--seed', type=int, default=1, help="Specify seed")
     commandLineParser.add_argument('--force_cpu', action='store_true', help='force cpu use')
     commandLineParser.add_argument('--aug', action='store_true', help='use data augmentation')
+    commandLineParser.add_argument('--domain', type=str, default='none', help="Specify source domain for DA dataset")
     args = commandLineParser.parse_args()
 
     set_seeds(args.seed)
-    out_file = f'{args.out_dir}/{args.model_name}_{args.data_name}_seed{args.seed}.th'
+    out_file = f'{args.out_dir}/{args.model_name}_{args.data_name}_aug{args.aug}_seed{args.seed}.th'
 
     # Save the command run
     if not os.path.isdir('CMDs'):

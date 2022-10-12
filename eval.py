@@ -20,7 +20,7 @@ if __name__ == "__main__":
     commandLineParser.add_argument('--bs', type=int, default=64, help="Specify batch size")
     commandLineParser.add_argument('--num_seeds', type=int, default=1, help="Specify number of seeds for model to load")
     commandLineParser.add_argument('--force_cpu', action='store_true', help='force cpu use')
-    commandLineParser.add_argument('--domain', type=int, default=0, help="Specify domain for test set")
+    commandLineParser.add_argument('--domain', type=str, default=0, help="Specify domain for test set")
     args = commandLineParser.parse_args()
 
     # Assume num seeds is one in this script

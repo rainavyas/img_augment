@@ -103,7 +103,7 @@ def train_selector(args, val=0.2):
     num_train = len(ds) - num_val
     train_ds, val_ds = random_split(ds, [num_train, num_val], generator=torch.Generator().manual_seed(42))
     print("Train data size", len(train_ds))
-    print("Test data size", len(train_ds))
+    print("Validation data size", len(val_ds))
     return train_ds, val_ds
 
 def test_selector(args):
@@ -169,34 +169,10 @@ def test_selector(args):
             return all_corr_dset
 
 
-
-
-
-
-
-
-        # brightness = np.load('brightness.npy')
-        # contrast = np.load('contrast.npy')
-        # defocus_blur = np.load('defocus_blur.npy')
-        # elastic_transform = np.load('elastic_transform.npy')
-        # fog = np.load('fog.npy')
-        # frost = np.load('frost.npy')
-        # gaussian_blur = np.load('gaussian_blur.npy')
-        # gaussian_noise = np.load('gaussian_noise.npy')
-        # glass_blur = np.load('glass_blur.npy')
-        # impulse_noise = np.load('impulse_noise.npy')
-        # jpeg_compression = np.load('jpeg_compression.npy')
-        # labels = np.load('labels.npy')
-        # motion_blur = np.load('motion_blur.npy')
-        # pixelate = np.load('pixelate.npy')
-        # saturate = np.load('saturate.npy')
-        # shot_noise = np.load('shot_noise.npy')
-        # snow = np.load('snow.npy')
-        # spatter = np.load('spatter.npy')
-        # speckle_noise = np.load('speckle_noise.npy')
-        # zoom_blur = np.load('zoom_blur.npy')
-        # labels = np.load('labels.npy')
-            
+    elif args.data_name == 'digits':
+        if args.domain == 'mnist': return tv.datasets.mnist.MNIST(args.data_dir_path, train=False, download=True, transform = grayscale_test_transform)
+        if args.domain == 'usps': return tv.datasets.usps.USPS(args.data_dir_path, train=False, download=True, transform = grayscale_test_transform)
+        if args.domain == 'svhn': return tv.datasets.svhn.SVHN(args.data_dir_path, split='test', download=True, transform = test_transform)
 
 
 

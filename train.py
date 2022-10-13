@@ -26,7 +26,7 @@ if __name__ == "__main__":
     commandLineParser.add_argument('--seed', type=int, default=1, help="Specify seed")
     commandLineParser.add_argument('--force_cpu', action='store_true', help='force cpu use')
     commandLineParser.add_argument('--aug', action='store_true', help='use data augmentation')
-    commandLineParser.add_argument('--aug-sample', action='store_true', help='use data augmentation to define a distribution and use this to sample original training samples')
+    commandLineParser.add_argument('--aug_sample', action='store_true', help='use data augmentation to define a distribution and use this to sample original training samples')
     commandLineParser.add_argument('--domain', type=str, default='none', help="Specify source domain for DA dataset")
     args = commandLineParser.parse_args()
 
@@ -55,7 +55,7 @@ if __name__ == "__main__":
     criterion = nn.CrossEntropyLoss().to(device)
 
     # Load the training data and construct Trainer
-    if args.aug-sample:
+    if args.aug_sample:
         # load augmented train data
         args.aug = True
         ds_for_dist, _ = data_sel(args, train=True)

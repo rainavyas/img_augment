@@ -1,3 +1,5 @@
 CMDs/*
 *.th
 *.pyc
+jobs/*
+data/*

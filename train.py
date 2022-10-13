@@ -7,6 +7,7 @@ from src.tools.tools import get_default_device, set_seeds
 from src.models.model_selector import model_sel
 from src.data.data_selector import data_sel
 from src.training.trainer import Trainer
+from src.training.density_sampling import DensitySampleTrainer
 
 if __name__ == "__main__":
 
@@ -25,11 +26,12 @@ if __name__ == "__main__":
     commandLineParser.add_argument('--seed', type=int, default=1, help="Specify seed")
     commandLineParser.add_argument('--force_cpu', action='store_true', help='force cpu use')
     commandLineParser.add_argument('--aug', action='store_true', help='use data augmentation')
+    commandLineParser.add_argument('--aug-sample', action='store_true', help='use data augmentation to define a distribution and use this to sample original training samples')
     commandLineParser.add_argument('--domain', type=str, default='none', help="Specify source domain for DA dataset")
     args = commandLineParser.parse_args()
 
     set_seeds(args.seed)
-    out_file = f'{args.out_dir}/{args.model_name}_{args.data_name}_aug{args.aug}_seed{args.seed}.th'
+    out_file = f'{args.out_dir}/{args.model_name}_{args.data_name}_aug{args.aug}_aug-sample{args.aug_sample}_seed{args.seed}.th'
 
     # Save the command run
     if not os.path.isdir('CMDs'):
@@ -43,11 +45,6 @@ if __name__ == "__main__":
     else:
         device = get_default_device()
 
-    # Load the training data
-    train_ds, val_ds = data_sel(args, train=True)
-    train_dl = torch.utils.data.DataLoader(train_ds, batch_size=args.bs, shuffle=True)
-    val_dl = torch.utils.data.DataLoader(val_ds, batch_size=args.bs, shuffle=False)
-
     # Initialise model
     model = model_sel(args.model_name)
     model.to(device)
@@ -57,6 +54,24 @@ if __name__ == "__main__":
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=args.sch)
     criterion = nn.CrossEntropyLoss().to(device)
 
+    # Load the training data and construct Trainer
+    if args.aug-sample:
+        # load augmented train data
+        args.aug = True
+        ds_for_dist, _ = data_sel(args, train=True)
+        trainer = DensitySampleTrainer(ds_for_dist, device, model, optimizer, criterion, scheduler)
+
+        # load non-augmented train and val data
+        args.aug = False
+        train_ds, val_ds = data_sel(args, train=True)
+        train_dl = trainer.prep_weighted_dl(train_ds, bs=args.bs)
+        val_dl = torch.utils.data.DataLoader(val_ds, batch_size=args.bs, shuffle=False)
+    else:
+        train_ds, val_ds = data_sel(args, train=True)
+        train_dl = torch.utils.data.DataLoader(train_ds, batch_size=args.bs, shuffle=True)
+        val_dl = torch.utils.data.DataLoader(val_ds, batch_size=args.bs, shuffle=False)
+        trainer = Trainer(device, model, optimizer, criterion, scheduler)
+
+
     # Train
-    trainer = Trainer(device, model, optimizer, criterion, scheduler)
     trainer.train_process(train_dl, val_dl, out_file, max_epochs=args.epochs)

@@ -16,8 +16,7 @@ import numpy as np
 class Estimator():
     '''
     Uses Kernel Density Estimation for multi-dimensional Tensors
-    '''
-    
+    ''' 
 
     @staticmethod
     def _process_ds_and_flatten(ds):

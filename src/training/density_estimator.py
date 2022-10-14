@@ -11,6 +11,8 @@ Kernel Density Estimator - also known as the Parzen-Rosenblatt Window method
 from sklearn.neighbors import KernelDensity
 import torch
 import numpy as np
+import multiprocessing
+from datetime import datetime
 
 
 class Estimator():
@@ -30,8 +32,10 @@ class Estimator():
         return torch.stack(xs, dim=0).cpu().detach().numpy()
 
     @classmethod
-    def train_kde(cls, train_ds, kernel='gaussian', bandwidth=1):
-        X = cls._process_ds_and_flatten(train_ds)
+    def train_kde(cls, ds, kernel='gaussian', bandwidth=1, kde_frac=1.0):
+        subset_idx = torch.randperm(len(ds))[:int(kde_frac*len(ds))]
+        ds = Subset(ds,subset_idx)
+        X = cls._process_ds_and_flatten(ds)
         model = KernelDensity(kernel=kernel, bandwidth=bandwidth)
         model.fit(X)
         return model
@@ -39,5 +43,26 @@ class Estimator():
     @classmethod
     def test_kde(cls, test_ds, model):
         X = cls._process_ds_and_flatten(test_ds)
-        log_prob = model.score_samples(X)
+        # import pdb; pdb.set_trace()
+        # log_prob = model.score_samples(X)
+        # log_prob = cls.parrallel_score_samples(model, X)
+        log_prob = cls.sequentially_score_samples(model, X)
         return np.exp(log_prob)
+
+    @staticmethod
+    def parrallel_score_samples(kde, samples, thread_count=int(0.875 * multiprocessing.cpu_count())):
+        # currently failing due to pickle memory being exceeded by parallel threads
+        # Solution: need to pickle save the output of each thread and then load all of them
+        print(f"Using {thread_count} threads")
+        samples = samples[:50] # temp
+        with multiprocessing.Pool(thread_count) as p:
+            return np.concatenate(p.map(kde.score_samples, np.array_split(samples, thread_count)))
+
+    @staticmethod
+    def sequentially_score_samples(kde, samples, num=10):
+        seq_samples = np.array_split(samples, num)
+        scores = []
+        for i,s in enumerate(seq_samples):
+            print(f'On {i}/{num} {datetime.now()}')
+            scores.append(kde.score_samples(s))
+        return np.concatenate(scores)

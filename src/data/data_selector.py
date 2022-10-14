@@ -98,7 +98,6 @@ def train_selector(args, val=0.2):
             ds = ConcatDataset((full_ds, ds))
 
     if args.prune > 0:
-        
         subset_idx = torch.randperm(len(ds))[:int(args.prune*len(ds))]
         ds = Subset(ds,subset_idx)
 
@@ -112,6 +111,7 @@ def train_selector(args, val=0.2):
 
 def test_selector(args):
     if args.data_name =='cifar10':
+        args.domain = int(args.domain)
         corr_path = os.path.join(args.data_dir_path, 'CIFAR-10-C')
         if args.domain == 0:
             test_ds = tv.datasets.CIFAR10(root=args.data_dir_path, train=False, transform=test_transform, download=True)

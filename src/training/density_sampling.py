@@ -1,6 +1,7 @@
 from .trainer import Trainer
 from .density_estimator import Estimator
 from torch.utils.data import DataLoader, WeightedRandomSampler
+from datetime import datetime
 
 class DensitySampleTrainer(Trainer):
     '''
@@ -17,11 +18,11 @@ class DensitySampleTrainer(Trainer):
         '''
         Creates dl with samples drawn to create each batch randomly using weighting as defined by distribution model
         '''
-        print("Getting weights")
+        print("Getting weights", datetime.now())
         weights = Estimator.test_kde(ds, self.dist_model)
-        print("Got weights")
+        print("Got weights", datetime.now())
         sampler = WeightedRandomSampler(weights, len(ds), replacement=True)
-        print("Done init sampler, creating dl")
+        print("Done init sampler, creating dl", datetime.now())
         dl = DataLoader(ds, batch_size=bs, sampler=sampler)
-        print("created dl")
+        print("created dl", datetime.now())
         return dl

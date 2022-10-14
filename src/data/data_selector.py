@@ -2,7 +2,7 @@ import torch, os, pdb
 import numpy as np 
 import torchvision as tv
 import torchvision.transforms as transforms
-from torch.utils.data import TensorDataset, ConcatDataset
+from torch.utils.data import TensorDataset, ConcatDataset, Subset
 from torch.utils.data import random_split
 
 def data_sel(args, train=True):
@@ -97,6 +97,10 @@ def train_selector(args, val=0.2):
                     full_ds = ConcatDataset((full_ds, aug_ds))
             ds = ConcatDataset((full_ds, ds))
 
+    if args.prune > 0:
+        
+        subset_idx = torch.randperm(len(ds))[:int(args.prune*len(ds))]
+        ds = Subset(ds,subset_idx)
 
 
     num_val = int(val*len(ds))

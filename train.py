@@ -3,6 +3,7 @@ import torch.nn as nn
 import sys
 import os, pdb
 import argparse
+from datetime import datetime
 from src.tools.tools import get_default_device, set_seeds
 from src.models.model_selector import model_sel
 from src.data.data_selector import data_sel
@@ -28,10 +29,11 @@ if __name__ == "__main__":
     commandLineParser.add_argument('--aug', action='store_true', help='use data augmentation')
     commandLineParser.add_argument('--aug_sample', action='store_true', help='use data augmentation to define a distribution and use this to sample original training samples')
     commandLineParser.add_argument('--domain', type=str, default='none', help="Specify source domain for DA dataset")
+    commandLineParser.add_argument('--prune', type=float, default=0.0, help="Specify source domain for DA dataset")
     args = commandLineParser.parse_args()
 
     set_seeds(args.seed)
-    out_file = f'{args.out_dir}/{args.model_name}_{args.data_name}_aug{args.aug}_aug-sample{args.aug_sample}_seed{args.seed}.th'
+    out_file = f'{args.out_dir}/{args.model_name}_{args.data_name}_{args.domain}_aug{args.aug}_aug-sample{args.aug_sample}_prune{args.prune}_seed{args.seed}.th'
 
     # Save the command run
     if not os.path.isdir('CMDs'):
@@ -53,7 +55,7 @@ if __name__ == "__main__":
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=args.sch)
     criterion = nn.CrossEntropyLoss().to(device)
-
+    print("Current time: ", datetime.now())
     # Load the training data and construct Trainer
     if args.aug_sample:
         # load augmented train data

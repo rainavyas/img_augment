@@ -34,7 +34,7 @@ if __name__ == "__main__":
     args = commandLineParser.parse_args()
 
     set_seeds(args.seed)
-    out_file = f'{args.out_dir}/{args.model_name}_{args.data_name}_{args.domain}_aug{args.aug}_aug-sample{args.aug_sample}_prune{args.prune}_seed{args.seed}.th'
+    out_file = f'{args.out_dir}/{args.model_name}_{args.data_name}_{args.domain}_aug{args.aug}_aug-sample{args.aug_sample}_prune{args.prune}_kdefrac{args.kde_frac}_seed{args.seed}.th'
 
     # Save the command run
     if not os.path.isdir('CMDs'):

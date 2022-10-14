@@ -9,6 +9,7 @@ Kernel Density Estimator - also known as the Parzen-Rosenblatt Window method
 '''
 
 from sklearn.neighbors import KernelDensity
+from torch.utils.data import TensorDataset, ConcatDataset, Subset
 import torch
 import numpy as np
 import multiprocessing

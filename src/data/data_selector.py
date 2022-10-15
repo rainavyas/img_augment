@@ -5,8 +5,8 @@ import torchvision.transforms as transforms
 from torch.utils.data import TensorDataset, ConcatDataset, Subset
 from torch.utils.data import random_split
 
-def data_sel(args, train=True):
-    if train ==True: return train_selector(args)
+def data_sel(args, train=True, only_aug=False):
+    if train ==True: return train_selector(args, only_aug=only_aug)
     else: return test_selector(args)
 
 aug_transform = transforms.Compose([
@@ -66,7 +66,7 @@ grayscale_train_transform = transforms.Compose([
                             ),
                         ])
 
-def train_selector(args, val=0.2):
+def train_selector(args, val=0.2, only_aug=False):
     if args.data_name =='cifar10':
         ds = tv.datasets.CIFAR10(root=args.data_dir_path, train=True, transform= train_transform, download = True)
         if args.aug == True:
@@ -95,7 +95,10 @@ def train_selector(args, val=0.2):
                     full_ds = aug_ds
                 else: 
                     full_ds = ConcatDataset((full_ds, aug_ds))
-            ds = ConcatDataset((full_ds, ds))
+            if only_aug:
+                ds = full_ds
+            else:
+                ds = ConcatDataset((full_ds, ds))
 
     if args.prune > 0:
         subset_idx = torch.randperm(len(ds))[:int(args.prune*len(ds))]

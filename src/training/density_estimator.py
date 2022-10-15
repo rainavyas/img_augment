@@ -48,6 +48,11 @@ class Estimator():
         # log_prob = model.score_samples(X)
         # log_prob = cls.parrallel_score_samples(model, X)
         log_prob = cls.sequentially_score_samples(model, X)
+        # scale probability densities (to get non-zero when we exponentiate)
+        m = np.median(log_prob)
+        log_prob -= m
+        import pdb; pdb.set_trace()
+        log_prob = np.clip(log_prob, None, 0.01*np.abs(m))
         return np.exp(log_prob)
 
     @staticmethod

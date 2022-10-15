@@ -61,7 +61,7 @@ if __name__ == "__main__":
     if args.aug_sample:
         # load augmented train data
         args.aug = True
-        ds_for_dist, _ = data_sel(args, train=True)
+        ds_for_dist, _ = data_sel(args, train=True, only_aug=True)
         trainer = DensitySampleTrainer(ds_for_dist, device, model, optimizer, criterion, scheduler, kde_frac = args.kde_frac)
 
         # load non-augmented train and val data

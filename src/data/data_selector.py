@@ -29,6 +29,7 @@ train_transform = transforms.Compose([
                         ),
                     ])
 test_transform = transforms.Compose([
+                    transforms.resize(16), # TODO comment out if you don't want to resize svhn - change for CIFAR as argument
                     transforms.ToTensor(),
                     transforms.Normalize(
                         mean=[0.4914, 0.4822, 0.4465],
@@ -37,6 +38,7 @@ test_transform = transforms.Compose([
                     ])
 
 grayscale_aug_transform = transforms.Compose([
+                        transforms.resize(16),
                         transforms.AutoAugment(),
                         # transforms.RandomCrop(size=32, padding=4),
                         transforms.RandomHorizontalFlip(),
@@ -48,6 +50,7 @@ grayscale_aug_transform = transforms.Compose([
                             ),
                         ])
 grayscale_test_transform = transforms.Compose([
+                        transforms.resize(16), # TODO comment out if you don't want to resize mnist - make arg to select if you want to resize
                         transforms.Grayscale(3),
                         transforms.ToTensor(),
                         transforms.Normalize(
@@ -76,7 +79,10 @@ def train_selector(args, val=0.2, only_aug=False):
                     full_ds = aug_ds
                 else: 
                     full_ds = ConcatDataset((full_ds, aug_ds))
-            ds = ConcatDataset((full_ds, ds))
+            if only_aug:
+                ds = full_ds
+            else:
+                ds = ConcatDataset((full_ds, ds))
 
 
     if args.data_name =='digits':

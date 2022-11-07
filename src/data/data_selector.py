@@ -29,7 +29,7 @@ train_transform = transforms.Compose([
                         ),
                     ])
 test_transform = transforms.Compose([
-                    transforms.resize(16), # TODO comment out if you don't want to resize svhn - change for CIFAR as argument
+                    transforms.Resize(16), # TODO comment out if you don't want to resize svhn - change for CIFAR as argument
                     transforms.ToTensor(),
                     transforms.Normalize(
                         mean=[0.4914, 0.4822, 0.4465],
@@ -38,7 +38,6 @@ test_transform = transforms.Compose([
                     ])
 
 grayscale_aug_transform = transforms.Compose([
-                        transforms.resize(16),
                         transforms.AutoAugment(),
                         # transforms.RandomCrop(size=32, padding=4),
                         transforms.RandomHorizontalFlip(),
@@ -50,7 +49,7 @@ grayscale_aug_transform = transforms.Compose([
                             ),
                         ])
 grayscale_test_transform = transforms.Compose([
-                        transforms.resize(16), # TODO comment out if you don't want to resize mnist - make arg to select if you want to resize
+                        transforms.Resize(16), # TODO comment out if you don't want to resize mnist - make arg to select if you want to resize
                         transforms.Grayscale(3),
                         transforms.ToTensor(),
                         transforms.Normalize(

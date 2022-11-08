@@ -20,6 +20,7 @@ class DensitySampleTrainer(Trainer):
         '''
         print("Getting weights", datetime.now())
         weights = Estimator.test_kde(ds, self.dist_model)
+        weights = weights/np.sum(weights)
         print("Got weights", datetime.now())
         sampler = WeightedRandomSampler(weights, len(ds), replacement=True)
         print("Done init sampler, creating dl", datetime.now())

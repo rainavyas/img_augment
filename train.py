@@ -31,10 +31,11 @@ if __name__ == "__main__":
     commandLineParser.add_argument('--kde_frac', type=float, default=1.0, help="Specify frac of data to keep for training kde estimator")
     commandLineParser.add_argument('--domain', type=str, default='none', help="Specify source domain for DA dataset")
     commandLineParser.add_argument('--prune', type=float, default=0.0, help="Specify source domain for DA dataset")
+    commandLineParser.add_argument('--only_aug', action='store_true', help='use only augmented data for target dist, otherwise orig+aug data for target')
     args = commandLineParser.parse_args()
 
     set_seeds(args.seed)
-    out_file = f'{args.out_dir}/{args.model_name}_{args.data_name}_{args.domain}_aug{args.aug}_aug-sample{args.aug_sample}_prune{args.prune}_kdefrac{args.kde_frac}_seed{args.seed}.th'
+    out_file = f'{args.out_dir}/{args.model_name}_{args.data_name}_{args.domain}_aug{args.aug}_aug-sample{args.aug_sample}_only-aug_{args.only_aug}_prune{args.prune}_kdefrac{args.kde_frac}_seed{args.seed}.th'
 
     # Save the command run
     if not os.path.isdir('CMDs'):
@@ -61,7 +62,7 @@ if __name__ == "__main__":
     if args.aug_sample:
         # load augmented train data
         args.aug = True
-        ds_for_dist, _ = data_sel(args, train=True, only_aug=True)
+        ds_for_dist, _ = data_sel(args, train=True, only_aug=args.only_aug)
         trainer = DensitySampleTrainer(ds_for_dist, device, model, optimizer, criterion, scheduler, kde_frac = args.kde_frac)
 
         # load non-augmented train and val data

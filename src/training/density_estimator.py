@@ -54,7 +54,8 @@ class Estimator():
         # log_prob -= m
         # log_prob = np.clip(log_prob, None, 0.01*np.abs(m))
 
-        return np.exp(log_prob)
+        # return np.exp(log_prob)
+        return log_prob
 
     @staticmethod
     def parrallel_score_samples(kde, samples, thread_count=int(0.875 * multiprocessing.cpu_count())):

@@ -2,6 +2,7 @@ from .trainer import Trainer
 from .density_estimator import Estimator
 from torch.utils.data import DataLoader, WeightedRandomSampler
 from datetime import datetime
+import numpy as np
 
 class DensitySampleTrainer(Trainer):
     '''

@@ -62,6 +62,7 @@ if __name__ == "__main__":
         for fpath, name in zip(args.load_files, args.names):
             weights = np.load(fpath)
             weights = np.sort(weights)
+            import pdb; pdb.set_trace()
             try:
                 weights = weights/np.sum(weights)
             except:

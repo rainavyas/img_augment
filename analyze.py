@@ -28,6 +28,7 @@ if __name__ == "__main__":
     commandLineParser.add_argument('--load_files', type=str, default=[], nargs='+', help="paths of files to load")
     commandLineParser.add_argument('--names', type=str, default=[], nargs='+', help="name for each file in legend")
     commandLineParser.add_argument('--plot_file', type=str, default='.', help="path to save plot")
+    commandLineParser.add_argument('--xclip', type=float, default=0.0, help="if you want to clip the plot for visualizaion")
     args = commandLineParser.parse_args()
 
     # Save the command run
@@ -49,7 +50,9 @@ if __name__ == "__main__":
 
         # get weights
         dist_model = Estimator.train_kde(ds_for_dist, kernel='gaussian', bandwidth=args.B)
-        weights = Estimator.test_kde(train_ds, dist_model)
+        log_weights = Estimator.test_kde(train_ds, dist_model)
+        scaled_log_weights = log_weights - np.max(log_weights)
+        weights = np.exp(scaled_log_weights)
 
         # save weights
         out_file = f'{args.save_dir}/weights_dist_only_aug{args.only_aug}_domain{args.domain}_{args.data_name}_B{args.B}'
@@ -62,7 +65,6 @@ if __name__ == "__main__":
         for fpath, name in zip(args.load_files, args.names):
             weights = np.load(fpath)
             weights = np.sort(weights)
-            import pdb; pdb.set_trace()
             try:
                 weights = weights/np.sum(weights)
             except:
@@ -70,9 +72,11 @@ if __name__ == "__main__":
 
             plt.plot(weights, np.arange(weights.size)/weights.size, label=name)
         
-        plt.legend()
+        plt.legend(title='Bandwidth')
         plt.xlabel('Normalized Weight')
         plt.ylabel('Cumulative Density')
+        if args.xclip > 0.0:
+            plt.xlim([-0.00001, args.xclip])
         plt.savefig(args.plot_file, bbox_inches='tight')
 
 

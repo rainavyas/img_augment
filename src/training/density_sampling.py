@@ -20,7 +20,9 @@ class DensitySampleTrainer(Trainer):
         Creates dl with samples drawn to create each batch randomly using weighting as defined by distribution model
         '''
         print("Getting weights", datetime.now())
-        weights = Estimator.test_kde(ds, self.dist_model)
+        log_weights = Estimator.test_kde(ds, self.dist_model)
+        scaled_log_weights = log_weights - np.max(log_weights)
+        weights = np.exp(scaled_log_weights)
         weights = weights/np.sum(weights)
         print("Got weights", datetime.now())
         sampler = WeightedRandomSampler(weights, len(ds), replacement=True)

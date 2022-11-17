@@ -72,7 +72,7 @@ def train_selector(args, val=0.2, only_aug=False):
     if args.data_name =='cifar10':
         ds = tv.datasets.CIFAR10(root=args.data_dir_path, train=True, transform= train_transform, download = True)
         if args.aug == True:
-            for i in range(3):
+            for i in range(args.aug_num):
                 aug_ds = tv.datasets.CIFAR10(root=args.data_dir_path, train=True, transform = aug_transform, download=True)
                 if i == 0:
                     full_ds = aug_ds
@@ -92,7 +92,7 @@ def train_selector(args, val=0.2, only_aug=False):
         elif args.domain == 'svhn': ds = tv.datasets.svhn.SVHN(args.data_dir_path, split='train', download=True, transform = train_transform)
         elif args.domain == 'usps': ds = tv.datasets.usps.USPS(args.data_dir_path, train=True, download=True, transform = grayscale_train_transform)
         if args.aug == True:
-            for i in range(3):
+            for i in range(args.aug_num):
                 if args.domain == 'mnist': aug_ds = tv.datasets.mnist.MNIST(args.data_dir_path, train=True, download=True, transform = grayscale_aug_transform)
                 elif args.domain == 'svhn': aug_ds = tv.datasets.svhn.SVHN(args.data_dir_path, split='train', download=True, transform = aug_transform)
                 elif args.domain == 'usps': aug_ds = tv.datasets.usps.USPS(args.data_dir_path, train=True, download=True, transform = grayscale_aug_transform)

@@ -33,10 +33,11 @@ if __name__ == "__main__":
     commandLineParser.add_argument('--prune', type=float, default=0.0, help="Specify pruning fraction")
     commandLineParser.add_argument('--only_aug', action='store_true', help='use only augmented data for target dist, otherwise orig+aug data for target')
     commandLineParser.add_argument('--B', type=float, default=1.0, help="KDE bandwidth")
+    commandLineParser.add_argument('--aug_num', type=int, default=3, help="Number of times to augment")
     args = commandLineParser.parse_args()
 
     set_seeds(args.seed)
-    out_file = f'{args.out_dir}/{args.model_name}_{args.data_name}_{args.domain}_aug{args.aug}_aug-sample{args.aug_sample}_only-aug_{args.only_aug}_B{args.B}_prune{args.prune}_kdefrac{args.kde_frac}_seed{args.seed}.th'
+    out_file = f'{args.out_dir}/{args.model_name}_{args.data_name}_{args.domain}_aug{args.aug}_aug-sample{args.aug_sample}_only-aug_{args.only_aug}_B{args.B}_prune{args.prune}_kdefrac{args.kde_frac}_aug-num{args.aug_num}_seed{args.seed}.th'
 
     # Save the command run
     if not os.path.isdir('CMDs'):

@@ -34,10 +34,11 @@ if __name__ == "__main__":
     commandLineParser.add_argument('--only_aug', action='store_true', help='use only augmented data for target dist, otherwise orig+aug data for target')
     commandLineParser.add_argument('--B', type=float, default=1.0, help="KDE bandwidth")
     commandLineParser.add_argument('--aug_num', type=int, default=3, help="Number of times to augment")
+    commandLineParser.add_argument('--gamma', type=float, default=1.0, help="Importance weighting power")
     args = commandLineParser.parse_args()
 
     set_seeds(args.seed)
-    out_file = f'{args.out_dir}/{args.model_name}_{args.data_name}_{args.domain}_aug{args.aug}_aug-sample{args.aug_sample}_only-aug_{args.only_aug}_B{args.B}_prune{args.prune}_kdefrac{args.kde_frac}_aug-num{args.aug_num}_seed{args.seed}.th'
+    out_file = f'{args.out_dir}/{args.model_name}_{args.data_name}_{args.domain}_aug{args.aug}_aug-sample{args.aug_sample}_gamma{args.gamma}_only-aug_{args.only_aug}_B{args.B}_prune{args.prune}_kdefrac{args.kde_frac}_aug-num{args.aug_num}_seed{args.seed}.th'
 
     # Save the command run
     if not os.path.isdir('CMDs'):
@@ -65,13 +66,16 @@ if __name__ == "__main__":
         # load augmented train data
         args.aug = True
         ds_for_dist, _ = data_sel(args, train=True, only_aug=args.only_aug)
-        trainer = DensitySampleTrainer(ds_for_dist, device, model, optimizer, criterion, scheduler, kde_frac = args.kde_frac, bandwidth=args.B)
-
+        
         # load non-augmented train and val data
         args.aug = False
         train_ds, val_ds = data_sel(args, train=True)
-        train_dl = trainer.prep_weighted_dl(train_ds, bs=args.bs)
+        # p(x), s(x)
+        trainer = DensitySampleTrainer(ds_for_dist, train_ds, device, model, optimizer, criterion, scheduler, kde_frac = args.kde_frac, bandwidth=args.B)
+        train_dl = trainer.prep_weighted_dl(train_ds, gamma=args.gamma, bs=args.bs)
         val_dl = torch.utils.data.DataLoader(val_ds, batch_size=args.bs, shuffle=False)
+
+
     else:
         train_ds, val_ds = data_sel(args, train=True)
         train_dl = torch.utils.data.DataLoader(train_ds, batch_size=args.bs, shuffle=True)

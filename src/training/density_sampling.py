@@ -41,4 +41,3 @@ class DensitySampleTrainer(Trainer):
         weights = np.exp(scaled_log_weights)
         weights = weights/np.sum(weights)
         return weights
-

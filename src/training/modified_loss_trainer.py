@@ -1,8 +1,10 @@
-import torch 
+import torch, pdb
 from..tools.tools import AverageMeter, accuracy_topk
 from.trainer import Trainer
 from torch.utils.data import TensorDataset
 from.density_sampling import DensitySampleTrainer
+from.density_estimator import Estimator
+from datetime import datetime
 
 
 class ModifiedLossTrainer(Trainer):
@@ -31,7 +33,7 @@ class ModifiedLossTrainer(Trainer):
 
             # Forward pass
             logits = model(x)
-            loss = criterion(logits, y)*w
+            loss = torch.mean(criterion(logits, y)*w, dim=0)
 
             # Backward pass and update
             optimizer.zero_grad()
@@ -45,6 +47,41 @@ class ModifiedLossTrainer(Trainer):
 
             if i % print_freq == 0:
                 print(f'Epoch: [{epoch}][{i}/{len(train_loader)}]\tLoss {losses.val:.4f} ({losses.avg:.4f})\tAccuracy {accs.val:.3f} ({accs.avg:.3f})')
+    
+    
+    @staticmethod
+    def eval(val_loader, model, criterion, device, return_logits=False):
+        '''
+        Run evaluation
+        '''
+        losses = AverageMeter()
+        accs = AverageMeter()
+
+        # switch to eval mode
+        model.eval()
+
+        all_logits = []
+        with torch.no_grad():
+            for (x, y) in val_loader:
+
+                x = x.to(device)
+                y = y.to(device)
+
+                # Forward pass
+                logits = model(x)
+                all_logits.append(logits)
+                loss = torch.mean(criterion(logits, y), dim=0)
+
+                # measure accuracy and record loss
+                acc = accuracy_topk(logits.data, y)
+                accs.update(acc.item(), x.size(0))
+                losses.update(loss.item(), x.size(0))
+
+        if return_logits:
+            return torch.cat(all_logits, dim=0).detach().cpu()
+
+        print(f'Test\t Loss ({losses.avg:.4f})\tAccuracy ({accs.avg:.3f})\n')
+        return accs.avg
 
     @staticmethod
     def calculate_importance_weights(ds_for_dist, train_ds, kernel='gaussian', bandwidth=1, kde_frac=1.0, gamma=1.0):
@@ -72,6 +109,6 @@ class ModifiedLossTrainer(Trainer):
         ws = torch.from_numpy(ws)
         for i in range(len(ds)):
             x, y = ds[i]
-            xs.append(x)
-            ys.append(y)        
-        return TensorDataset(torch.stack(xs, dim=0), torch.stack(ys, dim=0), ws)
+            xs.append(torch.Tensor(x))
+            ys.append(y)       
+        return TensorDataset(torch.stack(xs, dim=0), torch.LongTensor(ys), ws)

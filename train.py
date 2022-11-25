@@ -79,8 +79,9 @@ if __name__ == "__main__":
             train_dl = trainer.prep_weighted_dl(train_ds, gamma=args.gamma, bs=args.bs)
         else:
             # modified loss by importance weights
+            criterion = nn.CrossEntropyLoss(reduction = 'none').to(device)
             trainer = ModifiedLossTrainer(device, model, optimizer, criterion, scheduler)
-            weights = trainer.calculate_importance_weights(ds_for_dist, train_ds, bandwidth=args.bandwidth, kde_frac=args.kde_frac, gamma=args.gamma)
+            weights = trainer.calculate_importance_weights(ds_for_dist, train_ds, bandwidth=args.B, kde_frac=args.kde_frac, gamma=args.gamma)
             train_ds = trainer.weight_in_dataset(train_ds, weights)
             train_dl = torch.utils.data.DataLoader(train_ds, batch_size=args.bs, shuffle=True)
         val_dl = torch.utils.data.DataLoader(val_ds, batch_size=args.bs, shuffle=False)

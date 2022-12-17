@@ -41,6 +41,7 @@ if __name__ == "__main__":
     commandLineParser.add_argument('--xlow', type=float, default=0.0, help="if you want to clip the plot for visualizaion")
     commandLineParser.add_argument('--aug_num', type=int, default=3, help="Number of times to augment")
     commandLineParser.add_argument('--gamma', type=float, default=1.0, help="Importance weighting power")
+    commandLineParser.add_argument('--kde_frac', type=float, default=1.0, help="Specify frac of data to keep for training kde estimator")
     
     args = commandLineParser.parse_args()
 
@@ -63,11 +64,11 @@ if __name__ == "__main__":
 
         # get weights
         if args.weights_dist_type == 'both' or args.weights_dist_type == 'p':
-            dist_model = Estimator.train_kde(ds_for_dist, kernel='gaussian', bandwidth=args.B)
+            dist_model = Estimator.train_kde(ds_for_dist, kernel='gaussian', bandwidth=args.B, kde_frac=args.kde_frac)
             dist_weights = get_weights(dist_model, train_ds) # p(x)
         
         if args.weights_dist_type == 'both' or args.weights_dist_type == 's':
-            train_dist_model = Estimator.train_kde(train_ds, kernel='gaussian', bandwidth=args.B)
+            train_dist_model = Estimator.train_kde(train_ds, kernel='gaussian', bandwidth=args.B, kde_frac=args.kde_frac)
             train_weights = get_weights(train_dist_model, train_ds) # s(x)
         
         if args.weights_dist_type == 'both':

@@ -10,6 +10,8 @@ from src.data.data_selector import data_sel
 from src.training.trainer import Trainer
 from src.training.modified_loss_trainer import ModifiedLossTrainer
 from src.training.density_sampling import DensitySampleTrainer
+from src.training.compression import CompressedDensitySampleTrainer
+
 
 if __name__ == "__main__":
 
@@ -37,11 +39,15 @@ if __name__ == "__main__":
     commandLineParser.add_argument('--aug_num', type=int, default=3, help="Number of times to augment")
     commandLineParser.add_argument('--gamma', type=float, default=1.0, help="Importance weighting power")
     commandLineParser.add_argument('--loss_imp_train', action='store_true', help='scale the loss by importance weights during training')
+    commandLineParser.add_argument('--pca', action='store_true', help='compress the input images using pca')
+    commandLineParser.add_argument('--components', type=int, default=1, help='number of principal components')
+    commandLineParser.add_argument('--resize', action='store_true', help='compress the input images using pca')
+    commandLineParser.add_argument('--size', type=int, default=32, help='size of resized image for KDE estimation')
 
     args = commandLineParser.parse_args()
 
     set_seeds(args.seed)
-    out_file = f'{args.out_dir}/{args.model_name}_{args.data_name}_{args.domain}_aug{args.aug}_aug-sample{args.aug_sample}_gamma{args.gamma}_only-aug_{args.only_aug}_B{args.B}_prune{args.prune}_kdefrac{args.kde_frac}_aug-num{args.aug_num}_loss_imp_train{args.loss_imp_train}_seed{args.seed}.th'
+    out_file = f'{args.out_dir}/{args.model_name}_{args.data_name}_{args.domain}_aug{args.aug}_aug-sample{args.aug_sample}_gamma{args.gamma}_only-aug_{args.only_aug}_B{args.B}_prune{args.prune}_kdefrac{args.kde_frac}_pca{args.pca}_{args.components}_resize{args.resize}_{args.size}_aug-num{args.aug_num}_loss_imp_train{args.loss_imp_train}_seed{args.seed}.th'
 
     # Save the command run
     if not os.path.isdir('CMDs'):
@@ -73,10 +79,13 @@ if __name__ == "__main__":
         # load non-augmented train and val data
         args.aug = False
         train_ds, val_ds = data_sel(args, train=True)
-
         if args.aug_sample:
-            trainer = DensitySampleTrainer(ds_for_dist, train_ds, device, model, optimizer, criterion, scheduler, kde_frac = args.kde_frac, bandwidth=args.B)
-            train_dl = trainer.prep_weighted_dl(train_ds, gamma=args.gamma, bs=args.bs)
+            if args.pca or args.resize:
+                trainer = CompressedDensitySampleTrainer(ds_for_dist, train_ds, args.resize, args.pca, device, model, optimizer, criterion, scheduler, kde_frac = args.kde_frac, bandwidth=args.B, components=args.components, size=args.size)
+                train_dl = trainer.prep_weighted_dl(train_ds, gamma=args.gamma, bs=args.bs)
+            else:
+                trainer = DensitySampleTrainer(ds_for_dist, train_ds, device, model, optimizer, criterion, scheduler, kde_frac = args.kde_frac, bandwidth=args.B)
+                train_dl = trainer.prep_weighted_dl(train_ds, gamma=args.gamma, bs=args.bs)
         else:
             # modified loss by importance weights
             criterion = nn.CrossEntropyLoss(reduction = 'none').to(device)

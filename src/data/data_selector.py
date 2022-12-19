@@ -3,6 +3,7 @@ import numpy as np
 import torchvision as tv
 import torchvision.transforms as transforms
 from torch.utils.data import TensorDataset, ConcatDataset, Subset
+from torchvision import datasets
 from torch.utils.data import random_split
 
 def data_sel(args, train=True, only_aug=False):
@@ -10,6 +11,7 @@ def data_sel(args, train=True, only_aug=False):
     else: return test_selector(args)
 
 aug_transform = transforms.Compose([
+                        transforms.Resize(96),
                         transforms.AutoAugment(),
                         # transforms.RandomCrop(size=32, padding=4),
                         transforms.RandomHorizontalFlip(),
@@ -20,6 +22,7 @@ aug_transform = transforms.Compose([
                             ),
                         ])
 train_transform = transforms.Compose([
+                    transforms.Resize(96),
                     # transforms.RandomCrop(size=32, padding=4),
                     transforms.RandomHorizontalFlip(),
                     transforms.ToTensor(),
@@ -29,7 +32,7 @@ train_transform = transforms.Compose([
                         ),
                     ])
 test_transform = transforms.Compose([
-                    transforms.Resize(16), # TODO comment out if you don't want to resize svhn - change for CIFAR as argument
+                    transforms.Resize(28), # TODO comment out if you don't want to resize svhn - change for CIFAR as argument
                     transforms.ToTensor(),
                     transforms.Normalize(
                         mean=[0.4914, 0.4822, 0.4465],
@@ -49,7 +52,7 @@ grayscale_aug_transform = transforms.Compose([
                             ),
                         ])
 grayscale_test_transform = transforms.Compose([
-                        transforms.Resize(16), # TODO comment out if you don't want to resize mnist - make arg to select if you want to resize
+                        transforms.Resize(28), # TODO comment out if you don't want to resize mnist - make arg to select if you want to resize
                         transforms.Grayscale(3),
                         transforms.ToTensor(),
                         transforms.Normalize(
@@ -96,6 +99,48 @@ def train_selector(args, val=0.2, only_aug=False):
                 if args.domain == 'mnist': aug_ds = tv.datasets.mnist.MNIST(args.data_dir_path, train=True, download=True, transform = grayscale_aug_transform)
                 elif args.domain == 'svhn': aug_ds = tv.datasets.svhn.SVHN(args.data_dir_path, split='train', download=True, transform = aug_transform)
                 elif args.domain == 'usps': aug_ds = tv.datasets.usps.USPS(args.data_dir_path, train=True, download=True, transform = grayscale_aug_transform)
+                if i == 0:
+                    full_ds = aug_ds
+                else: 
+                    full_ds = ConcatDataset((full_ds, aug_ds))
+            if only_aug:
+                ds = full_ds
+            else:
+                ds = ConcatDataset((full_ds, ds))
+
+
+    if args.data_name == 'pacs':
+        split_pacs = os.path.join(args.data_dir_path, 'pacs_split')
+        art_dir = os.path.join(split_pacs, 'art')
+        cartoon_dir = os.path.join(split_pacs, 'cartoon')
+        photo_dir = os.path.join(split_pacs, 'photo')
+        sketch_dir = os.path.join(split_pacs, 'sketch')
+
+        if not os.path.isdir(split_pacs):
+            
+            os.makedirs(split_pacs)
+            orig =  os.path.join(args.data_dir_path,'pacs_data')
+            splitfolders.ratio(os.path.join(orig, 'art_painting'), output=art_dir, seed =1337, ratio=(0.85,0.15),group_prefix=None)
+            splitfolders.ratio(os.path.join(orig, 'cartoon'), output=cartoon_dir, seed =1337, ratio=(0.85,0.15),group_prefix=None)
+            splitfolders.ratio(os.path.join(orig, 'photo'), output=photo_dir, seed =1337, ratio=(0.85,0.15),group_prefix=None)
+            splitfolders.ratio(os.path.join(orig, 'sketch'), output=sketch_dir, seed =1337, ratio=(0.85,0.15),group_prefix=None)
+
+        if args.domain == 'art':
+            ds = datasets.ImageFolder(root = os.path.join(art_dir,'train'), transform = train_transform)
+        if args.domain == 'cartoon':
+            ds = datasets.ImageFolder(root = os.path.join(cartoon_dir,'train'), transform = train_transform)
+        if args.domain == 'photo':
+            ds = datasets.ImageFolder(root = os.path.join(photo_dir,'train'), transform = train_transform)
+        if args.domain == 'sketch':
+            ds = datasets.ImageFolder(root = os.path.join(sketch_dir,'train'), transform = train_transform)
+
+        if args.aug == True:
+            for i in range(args.aug_num):
+                if args.domain == 'art': aug_ds = datasets.ImageFolder(root = os.path.join(art_dir,'train'), transform = aug_transform)
+                elif args.domain == 'cartoon': aug_ds = datasets.ImageFolder(root = os.path.join(cartoon_dir,'train'), transform = aug_transform)
+                elif args.domain == 'photo': aug_ds = datasets.ImageFolder(root = os.path.join(photo_dir,'train'), transform = aug_transform)
+                elif args.domain == 'sketch': aug_ds = datasets.ImageFolder(root = os.path.join(sketch_dir,'train'), transform = aug_transform)
+
                 if i == 0:
                     full_ds = aug_ds
                 else: 
@@ -186,6 +231,21 @@ def test_selector(args):
         if args.domain == 'usps': return tv.datasets.usps.USPS(args.data_dir_path, train=False, download=True, transform = grayscale_test_transform)
         if args.domain == 'svhn': return tv.datasets.svhn.SVHN(args.data_dir_path, split='test', download=True, transform = test_transform)
 
+    elif args.data_name == 'pacs':
+        split_pacs = os.path.join(args.data_dir_path, 'pacs_split')
+        art_dir = os.path.join(split_pacs, 'art')
+        cartoon_dir = os.path.join(split_pacs, 'cartoon')
+        photo_dir = os.path.join(split_pacs, 'photo')
+        sketch_dir = os.path.join(split_pacs, 'sketch')
+
+        if args.domain == 'art':
+            return datasets.ImageFolder(root = os.path.join(art_dir,'val'), transform = test_transform)
+        if args.domain == 'cartoon':
+            return datasets.ImageFolder(root = os.path.join(cartoon_dir,'val'), transform = test_transform)
+        if args.domain == 'photo':
+            return datasets.ImageFolder(root = os.path.join(photo_dir,'val'), transform = test_transform)
+        if args.domain == 'sketch':
+            return datasets.ImageFolder(root = os.path.join(sketch_dir,'val'), transform = test_transform)
 
 
 

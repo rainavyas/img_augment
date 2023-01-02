@@ -3,7 +3,7 @@ from torch.utils.data import ConcatDataset
 
 from .data_utils import train_selector, test_selector
 
-def load_attacked(args, train=True, method='pgd', delta=0.1, only_adv=False):
+def load_attacked(args, train=True, method='pgd', delta=0.2, only_adv=False):
 
     if train:
         

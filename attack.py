@@ -24,7 +24,7 @@ if __name__ == "__main__":
     commandLineParser.add_argument('--force_cpu', action='store_true', help='force cpu use')
     commandLineParser.add_argument('--attack_method', type=str, default='pgd', help="Specify attack method")
     commandLineParser.add_argument('--part', type=str, default='train', choices=['train', 'val', 'test'], help="Specify data split to attack")
-    commandLineParser.add_argument('--delta', type=float, default=0.1, help="Specify perturbation size")
+    commandLineParser.add_argument('--delta', type=float, default=0.2, help="Specify perturbation size")
     args = commandLineParser.parse_args()
 
     # Save the command run
@@ -47,7 +47,7 @@ if __name__ == "__main__":
         if args.part == 'val':
             ds = val_ds
     else:
-        ds = data_sel(args, train=True)
+        ds = data_sel(args, train=False)
 
 
     # Load the model
@@ -55,10 +55,10 @@ if __name__ == "__main__":
     model.to(device)
 
     # Attack
-    attacked_ds = Attacker.attack_ds(ds, model, device, method=args.method, delta=args.delta)
+    attacked_ds = Attacker.attack_ds(ds, model, device, method=args.attack_method, delta=args.delta)
 
     # Save
     if not os.path.isdir(f'{args.data_dir_path}/Attacked'):
         os.mkdir(f'{args.data_dir_path}/Attacked')
-    out_file = f'{args.data_dir_path}/Attacked/{args.data_name}-{args.domain}_{args.part}_{args.method}_{args.model_name}_delta{args.delta}.pt'
+    out_file = f'{args.data_dir_path}/Attacked/{args.data_name}-{args.domain}_{args.part}_{args.attack_method}_{args.model_name}_delta{args.delta}.pt'
     torch.save(attacked_ds, out_file)

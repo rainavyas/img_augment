@@ -17,13 +17,15 @@ class DensitySampleTrainer(Trainer):
         self.dist_model = Estimator.train_kde(ds_for_dist, kernel=kernel, bandwidth=bandwidth, kde_frac=kde_frac)
         self.train_dist_model = Estimator.train_kde(train_ds, kernel=kernel, bandwidth=bandwidth, kde_frac=kde_frac)
     
-    def prep_weighted_dl(self, ds, gamma=1.0, bs=64):
+    def prep_weighted_dl(self, ds, gamma=1.0, bs=64, flat=False):
         '''
         Creates dl with samples drawn to create each batch randomly using weighting as defined by distribution model
         '''
         print("Getting weights", datetime.now())
         dist_weights = self.get_weights(self.dist_model, ds) # p(x)
         train_weights = self.get_weights(self.train_dist_model, ds) # s(x)
+        if flat:
+            dist_weights = 1.0
         corrected_weights = dist_weights / train_weights # p(x)/s(x) = w
         corrected_weights = corrected_weights**gamma # p(x)/s(x)**gamma
         print("Got weights", datetime.now())

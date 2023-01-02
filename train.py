@@ -43,11 +43,13 @@ if __name__ == "__main__":
     commandLineParser.add_argument('--components', type=int, default=1, help='number of principal components')
     commandLineParser.add_argument('--resize', action='store_true', help='compress the input images using pca')
     commandLineParser.add_argument('--size', type=int, default=32, help='size of resized image for KDE estimation')
+    commandLineParser.add_argument('--flat', action='store_true', help='flatten the weight sampling i.e. reweight by 1/s(x)')
+
 
     args = commandLineParser.parse_args()
 
     set_seeds(args.seed)
-    out_file = f'{args.out_dir}/{args.model_name}_{args.data_name}_{args.domain}_aug{args.aug}_aug-sample{args.aug_sample}_gamma{args.gamma}_only-aug_{args.only_aug}_B{args.B}_prune{args.prune}_kdefrac{args.kde_frac}_pca{args.pca}_{args.components}_resize{args.resize}_{args.size}_aug-num{args.aug_num}_loss_imp_train{args.loss_imp_train}_seed{args.seed}.th'
+    out_file = f'{args.out_dir}/{args.model_name}_{args.data_name}_{args.domain}_aug{args.aug}_aug-sample{args.aug_sample}_gamma{args.gamma}_only-aug_{args.only_aug}_B{args.B}_prune{args.prune}_kdefrac{args.kde_frac}_pca{args.pca}_{args.components}_resize{args.resize}_{args.size}_aug-num{args.aug_num}_loss_imp_train{args.loss_imp_train}_flat{args.flat}_seed{args.seed}.th'
 
     # Save the command run
     if not os.path.isdir('CMDs'):
@@ -85,7 +87,7 @@ if __name__ == "__main__":
                 train_dl = trainer.prep_weighted_dl(train_ds, gamma=args.gamma, bs=args.bs)
             else:
                 trainer = DensitySampleTrainer(ds_for_dist, train_ds, device, model, optimizer, criterion, scheduler, kde_frac = args.kde_frac, bandwidth=args.B)
-                train_dl = trainer.prep_weighted_dl(train_ds, gamma=args.gamma, bs=args.bs)
+                train_dl = trainer.prep_weighted_dl(train_ds, gamma=args.gamma, bs=args.bs, flat=args.flat)
         else:
             # modified loss by importance weights
             criterion = nn.CrossEntropyLoss(reduction = 'none').to(device)

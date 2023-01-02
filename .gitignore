@@ -3,3 +3,4 @@ CMDs/*
 *.pyc
 jobs/*
 data/*
+exps/

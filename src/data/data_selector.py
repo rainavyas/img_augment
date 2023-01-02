@@ -11,7 +11,7 @@ def data_sel(args, train=True, only_aug=False):
     else: return test_selector(args)
 
 aug_transform = transforms.Compose([
-                        transforms.Resize(96),
+                        transforms.Resize(16),
                         transforms.AutoAugment(),
                         # transforms.RandomCrop(size=32, padding=4),
                         transforms.RandomHorizontalFlip(),
@@ -22,7 +22,7 @@ aug_transform = transforms.Compose([
                             ),
                         ])
 train_transform = transforms.Compose([
-                    transforms.Resize(96),
+                    transforms.Resize(16),
                     # transforms.RandomCrop(size=32, padding=4),
                     transforms.RandomHorizontalFlip(),
                     transforms.ToTensor(),
@@ -32,7 +32,8 @@ train_transform = transforms.Compose([
                         ),
                     ])
 test_transform = transforms.Compose([
-                    transforms.Resize(28), # TODO comment out if you don't want to resize svhn - change for CIFAR as argument
+                    transforms.Resize(16),
+                    # transforms.Resize(28), # TODO comment out if you don't want to resize svhn - change for CIFAR as argument
                     transforms.ToTensor(),
                     transforms.Normalize(
                         mean=[0.4914, 0.4822, 0.4465],
@@ -41,6 +42,7 @@ test_transform = transforms.Compose([
                     ])
 
 grayscale_aug_transform = transforms.Compose([
+                        transforms.Resize(16),
                         transforms.AutoAugment(),
                         # transforms.RandomCrop(size=32, padding=4),
                         transforms.RandomHorizontalFlip(),
@@ -52,7 +54,7 @@ grayscale_aug_transform = transforms.Compose([
                             ),
                         ])
 grayscale_test_transform = transforms.Compose([
-                        transforms.Resize(28), # TODO comment out if you don't want to resize mnist - make arg to select if you want to resize
+                        transforms.Resize(16), # TODO comment out if you don't want to resize mnist - make arg to select if you want to resize
                         transforms.Grayscale(3),
                         transforms.ToTensor(),
                         transforms.Normalize(
@@ -61,6 +63,7 @@ grayscale_test_transform = transforms.Compose([
                             ),
                         ])
 grayscale_train_transform = transforms.Compose([
+                        transforms.Resize(16),
                         # transforms.RandomCrop(size=32, padding=4),
                         transforms.RandomHorizontalFlip(),
                         transforms.Grayscale(3),

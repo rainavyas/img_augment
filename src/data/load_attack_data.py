@@ -21,7 +21,7 @@ def load_attacked(args, train=True, method='pgd', delta=0.2, only_adv=False):
         args.aug = False
         train_ds, val_ds = train_selector(args)
 
-        return ConcatDataset(train_ds, train_ds_a), ConcatDataset(val_ds, val_ds_a)
+        return ConcatDataset((train_ds, train_ds_a)), ConcatDataset((val_ds, val_ds_a))
     
     if not train:
         # load only attacked test data 

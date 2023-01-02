@@ -3,7 +3,8 @@ import numpy as np
 import torchvision as tv
 import torchvision.transforms as transforms
 from torch.utils.data import TensorDataset, ConcatDataset, Subset
-from torch.utils.data import random_split
+# from torch.utils.data import random_split
+from sklearn.model_selection import train_test_split
 
 aug_transform = transforms.Compose([
                         transforms.AutoAugment(),
@@ -107,8 +108,12 @@ def train_selector(args, val=0.2, only_aug=False):
 
 
     num_val = int(val*len(ds))
-    num_train = len(ds) - num_val
-    train_ds, val_ds = random_split(ds, [num_train, num_val], generator=torch.Generator().manual_seed(42))
+    train_indices, val_indices = train_test_split(range(len(ds)), test_size=num_val, random_state=42)
+    train_ds = Subset(ds, train_indices)
+    val_ds = Subset(ds, val_indices)
+
+    # num_train = len(ds) - num_val
+    # train_ds, val_ds = random_split(ds, [num_train, num_val], generator=torch.Generator().manual_seed(42))
     print("Train data size", len(train_ds))
     print("Validation data size", len(val_ds))
     return train_ds, val_ds

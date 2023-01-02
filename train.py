@@ -16,7 +16,7 @@ if __name__ == "__main__":
     commandLineParser = argparse.ArgumentParser()
     commandLineParser.add_argument('--out_dir', type=str, required=True, help='Specify dir to save model')
     commandLineParser.add_argument('--model_name', type=str, required=True, help='e.g. vgg16')
-    commandLineParser.add_argument('--data_name', type=str, required=True, help='e.g. cifar10')
+    commandLineParser.add_argument('--data_name', type=str, required=True, help='e.g. digits')
     commandLineParser.add_argument('--data_dir_path', type=str, required=True, help='path to data directory, e.g. data')
     commandLineParser.add_argument('--bs', type=int, default=64, help="Specify batch size")
     commandLineParser.add_argument('--epochs', type=int, default=200, help="Specify max epochs")
@@ -31,13 +31,17 @@ if __name__ == "__main__":
     commandLineParser.add_argument('--kde_frac', type=float, default=1.0, help="Specify frac of data to keep for training kde estimator")
     commandLineParser.add_argument('--domain', type=str, default='none', help="Specify source domain for DA dataset")
     commandLineParser.add_argument('--prune', type=float, default=0.0, help="Specify pruning fraction")
-    commandLineParser.add_argument('--only_aug', action='store_true', help='use only augmented data for target dist, otherwise orig+aug data for target')
+    commandLineParser.add_argument('--only_aug', action='store_true', help='use only augmented data/adv data for target dist, otherwise orig+aug data for target')
     commandLineParser.add_argument('--B', type=float, default=1.0, help="KDE bandwidth")
     commandLineParser.add_argument('--aug_num', type=int, default=3, help="Number of times to augment")
+    commandLineParser.add_argument('--adv', action='store_true', help='do adversarial training / load adv data')
     args = commandLineParser.parse_args()
 
     set_seeds(args.seed)
     out_file = f'{args.out_dir}/{args.model_name}_{args.data_name}_{args.domain}_aug{args.aug}_aug-sample{args.aug_sample}_only-aug_{args.only_aug}_B{args.B}_prune{args.prune}_kdefrac{args.kde_frac}_aug-num{args.aug_num}_seed{args.seed}.th'
+    if args.adv:
+        out_file = f'{args.out_dir}/{args.model_name}_{args.data_name}_{args.domain}_adv{args.adv}_adv-sample{args.aug_sample}_B{args.B}_prune{args.prune}_kdefrac{args.kde_frac}_seed{args.seed}.th'
+  
 
     # Save the command run
     if not os.path.isdir('CMDs'):
@@ -62,18 +66,19 @@ if __name__ == "__main__":
     print("Current time: ", datetime.now())
     # Load the training data and construct Trainer
     if args.aug_sample:
-        # load augmented train data
+        # load augmented/adv train data
         args.aug = True
-        ds_for_dist, _ = data_sel(args, train=True, only_aug=args.only_aug)
+        # ds_for_dist, _ = data_sel(args, train=True, only_aug=args.only_aug, adv=args.adv)
+        ds_for_dist, _ = data_sel(args, train=True, only_aug=True, adv=args.adv)
         trainer = DensitySampleTrainer(ds_for_dist, device, model, optimizer, criterion, scheduler, kde_frac = args.kde_frac, bandwidth=args.B)
 
-        # load non-augmented train and val data
+        # load non-augmented/adv train and val data
         args.aug = False
-        train_ds, val_ds = data_sel(args, train=True)
+        train_ds, val_ds = data_sel(args, train=True, adv=False)
         train_dl = trainer.prep_weighted_dl(train_ds, bs=args.bs)
         val_dl = torch.utils.data.DataLoader(val_ds, batch_size=args.bs, shuffle=False)
     else:
-        train_ds, val_ds = data_sel(args, train=True)
+        train_ds, val_ds = data_sel(args, train=True, adv=args.adv)
         train_dl = torch.utils.data.DataLoader(train_ds, batch_size=args.bs, shuffle=True)
         val_dl = torch.utils.data.DataLoader(val_ds, batch_size=args.bs, shuffle=False)
         trainer = Trainer(device, model, optimizer, criterion, scheduler)

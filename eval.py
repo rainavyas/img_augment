@@ -21,6 +21,7 @@ if __name__ == "__main__":
     commandLineParser.add_argument('--num_seeds', type=int, default=1, help="Specify number of seeds for model to load")
     commandLineParser.add_argument('--force_cpu', action='store_true', help='force cpu use')
     commandLineParser.add_argument('--domain', type=str, default=0, help="Specify domain for test set")
+    commandLineParser.add_argument('--adv', action='store_true', help='load adv data')
     args = commandLineParser.parse_args()
 
     # Assume num seeds is one in this script
@@ -39,7 +40,7 @@ if __name__ == "__main__":
         device = get_default_device()
 
     # Load the test data
-    ds = data_sel(args, train=False)
+    ds = data_sel(args, train=False, adv=args.adv)
     dl = torch.utils.data.DataLoader(ds, batch_size=args.bs, shuffle=False)
 
     # Load model

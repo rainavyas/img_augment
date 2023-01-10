@@ -33,6 +33,14 @@ test_transform = transforms.Compose([
                         std=[0.2023, 0.1994, 0.2010], 
                         ),
                     ])
+test_transform_C = transforms.Compose([
+                    #transforms.Resize(16),
+                    transforms.ToTensor(),
+                    transforms.Normalize(
+                        mean=[0.4914, 0.4822, 0.4465],
+                        std=[0.2023, 0.1994, 0.2010], 
+                        ),
+                    ])
 
 grayscale_aug_transform = transforms.Compose([
                         transforms.AutoAugment(),
@@ -123,7 +131,7 @@ def test_selector(args):
         args.domain = int(args.domain)
         corr_path = os.path.join(args.data_dir_path, 'CIFAR-10-C')
         if args.domain == 0:
-            test_ds = tv.datasets.CIFAR10(root=args.data_dir_path, train=False, transform=test_transform, download=True)
+            test_ds = tv.datasets.CIFAR10(root=args.data_dir_path, train=False, transform=test_transform_C, download=True)
             return test_ds
         else:
             all_corr = []

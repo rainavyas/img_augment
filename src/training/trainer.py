@@ -25,7 +25,6 @@ class Trainer():
         model.train()
 
         for i, (x, y) in enumerate(train_loader):
-
             x = x.to(device)
             y = y.to(device)
             # Forward pass

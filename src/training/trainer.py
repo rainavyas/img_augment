@@ -1,5 +1,5 @@
 import torch 
-from..tools.tools import AverageMeter, accuracy_topk
+from..tools.tools import AverageMeter, accuracy_topk, print_log
 
 
 class Trainer():
@@ -42,7 +42,7 @@ class Trainer():
             losses.update(loss.item(), x.size(0))
 
             if i % print_freq == 0:
-                print(f'Epoch: [{epoch}][{i}/{len(train_loader)}]\tLoss {losses.val:.4f} ({losses.avg:.4f})\tAccuracy {accs.val:.3f} ({accs.avg:.3f})')
+                print_log(f'Epoch: [{epoch}][{i}/{len(train_loader)}]\tLoss {losses.val:.4f} ({losses.avg:.4f})\tAccuracy {accs.val:.3f} ({accs.avg:.3f})')
 
 
     @staticmethod
@@ -76,7 +76,7 @@ class Trainer():
         if return_logits:
             return torch.cat(all_logits, dim=0).detach().cpu()
 
-        print(f'Test\t Loss ({losses.avg:.4f})\tAccuracy ({accs.avg:.3f})\n')
+        print_log(f'Test\t Loss ({losses.avg:.4f})\tAccuracy ({accs.avg:.3f})\n')
         return accs.avg
 
     
@@ -86,7 +86,7 @@ class Trainer():
         for epoch in range(max_epochs):
 
             # train for one epoch
-            print('current lr {:.5e}'.format(self.optimizer.param_groups[0]['lr']))
+            print_log('current lr {:.5e}'.format(self.optimizer.param_groups[0]['lr']))
             self.train(train_dl, self.model, self.criterion, self.optimizer, epoch, self.device)
             self.scheduler.step()
 

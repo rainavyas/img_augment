@@ -1,5 +1,6 @@
 import torch
 import random
+import logging
 
 def set_seeds(seed):
     torch.manual_seed(seed)
@@ -41,3 +42,10 @@ class AverageMeter(object):
         self.sum += val * n
         self.count += n
         self.avg = self.sum / self.count
+        
+     def print_log(out_str):
+        print(out_str)
+        try:
+            logging.info(out_str)
+        except:
+        pass

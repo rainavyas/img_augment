@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import sys
 import os, pdb
+import logging
+
 import argparse
 from datetime import datetime
 from src.tools.tools import get_default_device, set_seeds
@@ -11,6 +13,12 @@ from src.training.trainer import Trainer
 from src.training.density_sampling import DensitySampleTrainer
 from src.training.compression import CompressedDensitySampleTrainer
 
+def base_name_creator(args):
+    base_name = f'{args.out_dir}/{args.model_name}_{args.data_name}_{args.domain}_aug{args.aug}_aug-sample{args.aug_sample}_gamma{args.gamma}_only-aug_{args.only_aug}_B{args.B}_prune{args.prune}_kdefrac{args.kde_frac}_pca{args.pca}_{args.components}_resize{args.resize}_{args.size}_aug-num{args.aug_num}_loss_imp_train{args.loss_imp_train}_seed{args.seed}'
+    if args.adv:
+        base_name = f'{args.out_dir}/{args.model_name}_{args.data_name}_{args.domain}_adv{args.adv}_adv-sample{args.aug_sample}_B{args.B}_prune{args.prune}_kdefrac{args.kde_frac}_seed{args.seed}'
+    return base_name
+        
 if __name__ == "__main__":
 
     # Get command line arguments
@@ -43,16 +51,19 @@ if __name__ == "__main__":
     args = commandLineParser.parse_args()
 
     set_seeds(args.seed)
-    out_file = f'{args.out_dir}/{args.model_name}_{args.data_name}_{args.domain}_aug{args.aug}_aug-sample{args.aug_sample}_gamma{args.gamma}_only-aug_{args.only_aug}_B{args.B}_prune{args.prune}_kdefrac{args.kde_frac}_pca{args.pca}_{args.components}_resize{args.resize}_{args.size}_aug-num{args.aug_num}_loss_imp_train{args.loss_imp_train}_seed{args.seed}.th'
-    if args.adv:
-        out_file = f'{args.out_dir}/{args.model_name}_{args.data_name}_{args.domain}_adv{args.adv}_adv-sample{args.aug_sample}_B{args.B}_prune{args.prune}_kdefrac{args.kde_frac}_seed{args.seed}.th'
-  
 
     # Save the command run
     if not os.path.isdir('CMDs'):
         os.mkdir('CMDs')
     with open('CMDs/train.cmd', 'a') as f:
         f.write(' '.join(sys.argv)+'\n')
+  
+    # Initialise logging
+    if not os.path.isdir('LOGs'):
+        os.mkdir('LOGs')
+    fname = f'LOGs/{base_name}.log'
+    logging.basicConfig(filename=fname, filemode='w', level=logging.INFO, format='%(asctime)s - %(message)s')
+    logging.info('LOG created')
 
     # Get the device
     if args.force_cpu:
@@ -89,4 +100,5 @@ if __name__ == "__main__":
 
 
     # Train
+    out_file = f'{base_name_creator(args)}.th'
     trainer.train_process(train_dl, val_dl, out_file, max_epochs=args.epochs)

@@ -9,6 +9,7 @@ from src.models.model_selector import model_sel
 from src.data.data_selector import data_sel
 from src.training.trainer import Trainer
 from src.training.density_sampling import DensitySampleTrainer
+from src.training.compression import CompressedDensitySampleTrainer
 
 if __name__ == "__main__":
 
@@ -35,10 +36,14 @@ if __name__ == "__main__":
     commandLineParser.add_argument('--B', type=float, default=1.0, help="KDE bandwidth")
     commandLineParser.add_argument('--aug_num', type=int, default=3, help="Number of times to augment")
     commandLineParser.add_argument('--adv', action='store_true', help='do adversarial training / load adv data')
+    commandLineParser.add_argument('--pca', action='store_true', help='compress the input images using pca')
+    commandLineParser.add_argument('--components', type=int, default=1, help='number of principal components')
+    commandLineParser.add_argument('--resize', action='store_true', help='compress the input images using pca')
+    commandLineParser.add_argument('--size', type=int, default=32, help='size of resized image for KDE estimation')
     args = commandLineParser.parse_args()
 
     set_seeds(args.seed)
-    out_file = f'{args.out_dir}/{args.model_name}_{args.data_name}_{args.domain}_aug{args.aug}_aug-sample{args.aug_sample}_only-aug_{args.only_aug}_B{args.B}_prune{args.prune}_kdefrac{args.kde_frac}_aug-num{args.aug_num}_seed{args.seed}.th'
+    out_file = f'{args.out_dir}/{args.model_name}_{args.data_name}_{args.domain}_aug{args.aug}_aug-sample{args.aug_sample}_gamma{args.gamma}_only-aug_{args.only_aug}_B{args.B}_prune{args.prune}_kdefrac{args.kde_frac}_pca{args.pca}_{args.components}_resize{args.resize}_{args.size}_aug-num{args.aug_num}_loss_imp_train{args.loss_imp_train}_seed{args.seed}.th'
     if args.adv:
         out_file = f'{args.out_dir}/{args.model_name}_{args.data_name}_{args.domain}_adv{args.adv}_adv-sample{args.aug_sample}_B{args.B}_prune{args.prune}_kdefrac{args.kde_frac}_seed{args.seed}.th'
   

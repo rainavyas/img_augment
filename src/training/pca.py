@@ -1,6 +1,5 @@
 from .trainer import Trainer
 from .density_estimator import Estimator
-from torch.utils.data import DataLoader, WeightedRandomSampler
 from datetime import datetime
 import numpy as np
 import pdb
@@ -17,7 +16,7 @@ def pca(ds, components=10):
         ys.append(y)
     xs = torch.stack(xs)
     xs = xs.view(len(xs), xs[0].shape[-1]*xs[0].shape[-2]*xs[0].shape[-3])
-    pca = PCA(n_components=components)
-    reduced_pca = pca.fit_transform(xs)
-    # pdb.set_trace()
-    return TensorDataset(torch.tensor(reduced_pca), torch.LongTensor(ys))
+    pca_cls = PCA(n_components=components)
+    pca_cls.fit(xs)
+    xs_pca = pca_cls.transform(xs)
+    return pca_cls, TensorDataset(torch.tensor(xs_pca), torch.LongTensor(ys))

@@ -18,14 +18,14 @@ class CompressedDensitySampleTrainer(Trainer):
         super().__init__(device, model, optimizer, criterion, scheduler)
 
         # Compressed
-        self.train_ds_comp = self.compress(train_ds, resize, size)
         self.ds_for_dist_comp = self.compress(ds_for_dist, resize, size)
+        self.train_ds_comp = self.compress(train_ds, resize, size)
         
         # Learn PCA projection matrix
         if pca:
-            self.train_ds_pca_cls, self.train_ds_pca = do_pca(train_ds_comp, components = components)
             self.ds_for_dist_pca_cls, self.ds_for_dist_pca = do_pca(ds_for_dist_comp, components = components)
-
+            self.train_ds_pca_cls, self.train_ds_pca = do_pca(train_ds_comp, components = components)
+            
         # Learn distribution for p(x) and s(x), we will define t(x) = p(x)/s(x)
         self.dist_model = Estimator.train_kde(self.ds_for_dist_pca, kernel=kernel, bandwidth=bandwidth, kde_frac=kde_frac)
         self.train_dist_model = Estimator.train_kde(self.train_ds_pca, kernel=kernel, bandwidth=bandwidth, kde_frac=kde_frac)
@@ -34,11 +34,11 @@ class CompressedDensitySampleTrainer(Trainer):
         '''
         Creates dl with samples drawn to create each batch randomly using weighting as defined by distribution model
         '''
-        print("Getting weights", datetime.now())
+        print("Getting weights", datetime.now()) 
 
 
-        dist_weights = self.get_weights(self.dist_model, self.apply_pca(self.train_ds_comp, self.train_ds_cls) if pca else self.train_ds_comp) # p(x)
-        train_weights = self.get_weights(self.train_dist_model, self.apply_pca(self.train_ds_comp, self.ds_for_dist_cls) if pca else self.train_ds_comp)# p(x)) # s(x)
+        dist_weights = self.get_weights(self.dist_model, self.apply_pca(self.train_ds_comp, self.ds_for_dist_cls) if pca else self.train_ds_comp) # p(x)
+        train_weights = self.get_weights(self.train_dist_model, self.apply_pca(self.train_ds_comp, self.train_ds_cls) if pca else self.train_ds_comp)# p(x)) # s(x)
         weights = dist_weights / train_weights # p(x)/s(x) = w
         corrected_weights = weights**gamma # p(x)/s(x)**gamma
         print("Got weights", datetime.now())

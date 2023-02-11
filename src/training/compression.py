@@ -37,10 +37,10 @@ class CompressedDensitySampleTrainer(Trainer):
         print("Getting weights", datetime.now())
 
 
-        dist_weights = self.get_weights(self.dist_model, self.train_ds_cls.transform(self.train_ds_comp) if pca else self.train_ds_comp) # p(x)
-        train_weights = self.get_weights(self.train_dist_model, self.ds_for_dist_cls.transform(self.train_ds_comp) if pca else self.train_ds_comp)# p(x)) # s(x)
-        corrected_weights = dist_weights / train_weights # p(x)/s(x) = w
-        corrected_weights = corrected_weights**gamma # p(x)/s(x)**gamma
+        dist_weights = self.get_weights(self.dist_model, self.apply_pca(self.train_ds_comp, self.train_ds_cls) if pca else self.train_ds_comp) # p(x)
+        train_weights = self.get_weights(self.train_dist_model, self.apply_pca(self.train_ds_comp, self.ds_for_dist_cls) if pca else self.train_ds_comp)# p(x)) # s(x)
+        weights = dist_weights / train_weights # p(x)/s(x) = w
+        corrected_weights = weights**gamma # p(x)/s(x)**gamma
         print("Got weights", datetime.now())
         sampler = WeightedRandomSampler(corrected_weights, len(ds), replacement=True)
         print("Done init sampler, creating dl", datetime.now())
@@ -60,8 +60,12 @@ class CompressedDensitySampleTrainer(Trainer):
     def apply_pca(ds, ds_cls):
         ys = []
         for i in range(len(ds)):
-            _, y = ds[i]
+            x, y = ds[i]
+            xs.append(x)
             ys.append(y)
+        xs = torch.stack(xs)
+        xs_pca = ds_cls.transform(xs)
+        return TensorDataset(torch.tensor(xs), torch.LongTensor(ys))
 
     def compress(self, ds, resize=False, size=32):
         if resize:

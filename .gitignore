@@ -3,3 +3,6 @@ CMDs/*
 *.pyc
 jobs/*
 data/*
+*.npy
+*.png
+*.log

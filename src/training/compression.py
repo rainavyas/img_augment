@@ -1,7 +1,7 @@
 from .trainer import Trainer
 from .density_estimator import Estimator
 from torch.utils.data import DataLoader, WeightedRandomSampler, Dataset, TensorDataset
-from .pca import pca
+from .pca import pca as do_pca
 from datetime import datetime
 import numpy as np
 import pdb, torch
@@ -50,15 +50,22 @@ class CompressedDensitySampleTrainer(Trainer):
 
     def compress(self, ds, pca=False, resize=False, components=10, size=32):
         if pca:
-            return pca(ds, components)
+            ds = do_pca(ds, components)
         if resize:
             xs = []
             ys = []
+            
             for i in range(len(ds)):
                 x, y = ds[i]
                 xs.append(torch.Tensor(x))
                 ys.append(y)
-            xs = torch.stack(xs)
-            out = F.interpolate(xs, size=[size,size])
-            return TensorDataset(torch.tensor(out), torch.LongTensor(ys))
+            pdb.set_trace()
+            xs = torch.unsqueeze(torch.stack(xs), dim=1)
+            if pca and (size**2 >= components):
+                raise ValueError("Size has to be smaller than no of components")
+            if pca:
+                out = F.interpolate(xs, size=size**2)
+            else:
+                out = F.interpolate(xs, size=size**2)
+            ds = TensorDataset(torch.tensor(out), torch.LongTensor(ys))
         return ds

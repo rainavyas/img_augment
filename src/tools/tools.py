@@ -43,9 +43,9 @@ class AverageMeter(object):
         self.count += n
         self.avg = self.sum / self.count
         
-     def print_log(out_str):
-        print(out_str)
-        try:
-            logging.info(out_str)
-        except:
-        pass
+def print_log(out_str):
+    print(out_str)
+try:
+    logging.info(out_str)
+except:
+    pass

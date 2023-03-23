@@ -14,7 +14,7 @@ from src.training.density_sampling import DensitySampleTrainer
 from src.training.compression import CompressedDensitySampleTrainer
 
 def base_name_creator(args):
-    base_name = f'{args.model_name}_{args.data_name}_{args.domain}_aug{args.aug}_aug-sample{args.aug_sample}_gamma{args.gamma}_only-aug_{args.only_aug}_B{args.B}_prune{args.prune}_kdefrac{args.kde_frac}_pca{args.pca}_{args.components}_resize{args.resize}_{args.size}_aug-num{args.aug_num}_seed{args.seed}'
+    base_name = f'{args.model_name}_{args.data_name}_{args.domain}_aug{args.aug}_aug-sample{args.aug_sample}_gamma{args.gamma}_only-aug_{args.only_aug}_B{args.B}_prune{args.prune}_kdefrac{args.kde_frac}_pca{args.pca}_{args.components}_resize{args.resize}_{args.size}_aug-num{args.aug_num}_latent{args.latent}_seed{args.seed}'
     if args.adv:
         base_name = f'{args.model_name}_{args.data_name}_{args.domain}_adv{args.adv}_adv-sample{args.aug_sample}_B{args.B}_prune{args.prune}_kdefrac{args.kde_frac}_pca{args.pca}_{args.components}_resize{args.resize}_{args.size}_aug-num{args.aug_num}_seed{args.seed}'
     return base_name
@@ -49,6 +49,8 @@ if __name__ == "__main__":
     commandLineParser.add_argument('--components', type=int, default=1, help='number of principal components')
     commandLineParser.add_argument('--resize', action='store_true', help='compress the input images using pca')
     commandLineParser.add_argument('--size', type=int, default=32, help='size of resized image for KDE estimation')
+    commandLineParser.add_argument('--latent', action='store_true', help='use latent representation to reweigh the samples')
+    
     args = commandLineParser.parse_args()
 
     set_seeds(args.seed)

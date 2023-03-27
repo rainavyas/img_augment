@@ -14,6 +14,7 @@ import torch
 import numpy as np
 import multiprocessing
 from datetime import datetime
+from tqdm import tqdm
 
 
 class Estimator():
@@ -70,7 +71,7 @@ class Estimator():
     def sequentially_score_samples(kde, samples, num=10):
         seq_samples = np.array_split(samples, num)
         scores = []
-        for i,s in enumerate(seq_samples):
-            print(f'On {i}/{num} {datetime.now()}')
+        for s in tqdm(seq_samples):
+            # print(f'On {i}/{num} {datetime.now()}')
             scores.append(kde.score_samples(s))
         return np.concatenate(scores)

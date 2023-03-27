@@ -94,8 +94,8 @@ if __name__ == "__main__":
         # load non-augmented/adv train and val data
         args.aug = False
         train_ds, val_ds = data_sel(args, train=True, adv=False)        
-        if args.pca or args.resize:
-            trainer = CompressedDensitySampleTrainer(ds_for_dist, train_ds, args.resize, args.pca, device, model, optimizer, criterion, scheduler, kde_frac = args.kde_frac, bandwidth=args.B, components=args.components, size=args.size)
+        if args.pca or args.resize or args.latent:
+            trainer = CompressedDensitySampleTrainer(ds_for_dist, train_ds, args.resize, args.pca, device, model, optimizer, criterion, scheduler, kde_frac = args.kde_frac, bandwidth=args.B, components=args.components, size=args.size, latent=args.latent)
         else:
             trainer = DensitySampleTrainer(ds_for_dist, train_ds, device, model, optimizer, criterion, scheduler, kde_frac = args.kde_frac, bandwidth=args.B)
         

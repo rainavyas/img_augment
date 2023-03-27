@@ -8,6 +8,8 @@ import pdb, torch
 from torchvision.models import resnet18
 from torchvision.transforms import Resize
 import torch.nn.functional as F
+from tqdm import tqdm
+from functools import lru_cache
 
 class CompressedDensitySampleTrainer(Trainer):
     ''' 
@@ -53,6 +55,7 @@ class CompressedDensitySampleTrainer(Trainer):
 
         dist_weights = self.get_weights(self.dist_model, self.apply_transform(ds_comp, self.ds_for_dist_pca_cls) if self.transform else ds_comp) # p(x)
         train_weights = self.get_weights(self.train_dist_model, self.apply_transform(ds_comp, self.train_ds_pca_cls) if self.transform else ds_comp) # s(x)
+        import pdb; pdb.set_trace()
         weights = dist_weights / train_weights # p(x)/s(x) = w
         corrected_weights = weights**gamma # p(x)/s(x)**gamma
 
@@ -92,7 +95,6 @@ class CompressedDensitySampleTrainer(Trainer):
                 x, y = ds[i]
                 xs.append(torch.Tensor(x))
                 ys.append(y)
-            pdb.set_trace()
             xs = torch.unsqueeze(torch.stack(xs), dim=1)
             out = F.interpolate(xs, size=size**2)
             ds = TensorDataset(torch.tensor(out), torch.LongTensor(ys))
@@ -104,17 +106,18 @@ class CompressedDensitySampleTrainer(Trainer):
         if self.pca:
             ds = self.apply_pca(ds, ds_pca_cls)
         return ds
-    
+
+    @lru_cache(max_size=8) 
     def latent_map(self, ds):
         # map every sample in dataset to resnet18 latent space
 
         dl = DataLoader(ds, batch_size=32, shuffle=False)
         xs = []
         ys = []
-        for (x, y) in dl:
+        for (x, y) in tqdm(dl):
             with torch.no_grad():
                 x = x.to(self.device)
-                model = resnet18(weights="DEFAULT")
+                model = resnet18(pretrained=True)
                 model = torch.nn.Sequential(*(list(model.children())[:-2]))
                 model.to(self.device)
                 out = model(x).detach().cpu()

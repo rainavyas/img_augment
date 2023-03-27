@@ -4,6 +4,7 @@ from torch.utils.data import DataLoader, WeightedRandomSampler
 from datetime import datetime
 import numpy as np
 import pdb
+from tqdm import tqdm
 
 class DensitySampleTrainer(Trainer):
     '''

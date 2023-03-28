@@ -107,7 +107,7 @@ class CompressedDensitySampleTrainer(Trainer):
             ds = self.apply_pca(ds, ds_pca_cls)
         return ds
 
-    @lru_cache(max_size=8) 
+    @lru_cache(maxsize=8) 
     def latent_map(self, ds):
         # map every sample in dataset to resnet18 latent space
 

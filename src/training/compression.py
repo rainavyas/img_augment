@@ -55,7 +55,7 @@ class CompressedDensitySampleTrainer(Trainer):
 
         dist_weights = self.get_weights(self.dist_model, self.apply_transform(ds_comp, self.ds_for_dist_pca_cls) if self.transform else ds_comp) # p(x)
         train_weights = self.get_weights(self.train_dist_model, self.apply_transform(ds_comp, self.train_ds_pca_cls) if self.transform else ds_comp) # s(x)
-        import pdb; pdb.set_trace()
+#         import pdb; pdb.set_trace()
         weights = dist_weights / train_weights # p(x)/s(x) = w
         corrected_weights = weights**gamma # p(x)/s(x)**gamma
 

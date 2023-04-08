@@ -6,11 +6,15 @@ import sys
 import os
 import argparse
 import torch
+from tqdm import tqdm
+from torch.utils.data import TensorDataset, DataLoader
 
 from src.tools.tools import get_default_device
 from src.attack.attacker import Attacker
 from src.data.data_selector import data_sel
 from src.models.model_selector import model_sel
+from src.training.trainer import Trainer
+
 
 if __name__ == "__main__":
 
@@ -25,6 +29,10 @@ if __name__ == "__main__":
     commandLineParser.add_argument('--attack_method', type=str, default='pgd', help="Specify attack method")
     commandLineParser.add_argument('--part', type=str, default='train', choices=['train', 'val', 'test'], help="Specify data split to attack")
     commandLineParser.add_argument('--delta', type=float, default=0.2, help="Specify perturbation size")
+    commandLineParser.add_argument('--num_iter', type=int, default=5, help="Number of iterations for attack method")
+    commandLineParser.add_argument('--for_adv', action='store_true', help='prep ds for adv train')
+    commandLineParser.add_argument('--get_fool', action='store_true', help='attack and calculate fooling rate')
+    commandLineParser.add_argument('--bs', type=int, default=64, help="Specify batch size")
     args = commandLineParser.parse_args()
 
     # Save the command run
@@ -54,11 +62,51 @@ if __name__ == "__main__":
     model = model_sel(args.model_name, args.model_path)
     model.to(device)
 
-    # Attack
-    attacked_ds = Attacker.attack_ds(ds, model, device, method=args.attack_method, delta=args.delta)
 
-    # Save
-    if not os.path.isdir(f'{args.data_dir_path}/Attacked'):
-        os.mkdir(f'{args.data_dir_path}/Attacked')
-    out_file = f'{args.data_dir_path}/Attacked/{args.data_name}-{args.domain}_{args.part}_{args.attack_method}_{args.model_name}_delta{args.delta}.pt'
-    torch.save(attacked_ds, out_file)
+
+
+    if args.get_fool:
+        # only attack correctly classified samples
+        dl = DataLoader(ds, batch_size=args.bs, shuffle=False)
+        criterion = torch.nn.CrossEntropyLoss().to(device)
+        logits = eval(dl, model, criterion, device, return_logits=True)
+        preds = torch.argmax(logits, dim=-1)
+
+        xs = []
+        ys = []
+        print("keeping only correctly classified samples")
+        for i in tqdm(range(len(ds))):
+            (x, y) = ds[i]
+            pred = preds[i]
+            if pred == y:
+                xs.append(x)
+                ys.append(y)
+        xs = torch.stack(xs, dim=0)
+        ys = torch.LongTensor(ys)
+        ds = TensorDataset(xs, ys)
+    
+
+
+    # Attack
+    attacked_ds = Attacker.attack_ds(ds, model, device, method=args.attack_method, delta=args.delta, num_iter=args.num_iter)
+
+    if args.for_adv:
+
+        # Save
+        if not os.path.isdir(f'{args.data_dir_path}/Attacked'):
+            os.mkdir(f'{args.data_dir_path}/Attacked')
+        out_file = f'{args.data_dir_path}/Attacked/{args.data_name}-{args.domain}_{args.part}_{args.attack_method}_{args.model_name}_delta{args.delta}.pt'
+        torch.save(attacked_ds, out_file)
+    
+    if args.get_fool:
+        # calculate fooling rate
+        total = len(ds)
+        fooled = 0
+        print('Calculating fooling rate')
+        for i in tqdm(range(len(ds))):
+            (_, y) = ds[i]
+            (_, y_att) = attacked_ds[i]
+            if y != y_att:
+                fooled += 1
+        print()
+        print(f'Fooling Rate\t{100*fooled/total}%')

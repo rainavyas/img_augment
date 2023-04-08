@@ -47,21 +47,21 @@ class Attacker():
         return x_attack.cpu().detach()
     
     @classmethod
-    def attack(cls, x, model, device, method='pgd', delta=0.2):
+    def attack(cls, x, model, device, method='pgd', delta=0.2, num_iter=5):
         '''Adversarial attack'''
         if method == 'fgsm':
             return cls.fgsm(model, x, delta, device)
         elif method == 'pgd':
-            return cls.pgd(model, x, delta, device)
+            return cls.pgd(model, x, delta, device, num_iter=num_iter)
     
     @classmethod
-    def attack_ds(cls, ds, model, device, method='pgd', delta=0.2):
+    def attack_ds(cls, ds, model, device, method='pgd', delta=0.2, num_iter=5):
         '''Attack entire ds'''
         xs = []
         ys = []
         for i in tqdm(range(len(ds))):
             (x, y) = ds[i]
-            xs.append(cls.attack(x, model, device, method=method, delta=delta))
+            xs.append(cls.attack(x, model, device, method=method, delta=delta, num_iter=num_iter))
             ys.append(y)
         xs = torch.stack(xs, dim=0)
         ys = torch.LongTensor(ys)

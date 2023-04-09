@@ -69,7 +69,7 @@ if __name__ == "__main__":
         # only attack correctly classified samples
         dl = DataLoader(ds, batch_size=args.bs, shuffle=False)
         criterion = torch.nn.CrossEntropyLoss().to(device)
-        logits = eval(dl, model, criterion, device, return_logits=True)
+        logits = Trainer.eval(dl, model, criterion, device, return_logits=True)
         preds = torch.argmax(logits, dim=-1)
 
         xs = []
@@ -99,13 +99,20 @@ if __name__ == "__main__":
         torch.save(attacked_ds, out_file)
     
     if args.get_fool:
+
+        # get attacked predictions
+        dl = DataLoader(attacked_ds, batch_size=args.bs, shuffle=False)
+        criterion = torch.nn.CrossEntropyLoss().to(device)
+        logits = Trainer.eval(dl, model, criterion, device, return_logits=True)
+        y_atts = torch.argmax(logits, dim=-1).detach().cpu()
+
         # calculate fooling rate
         total = len(ds)
         fooled = 0
         print('Calculating fooling rate')
         for i in tqdm(range(len(ds))):
             (_, y) = ds[i]
-            (_, y_att) = attacked_ds[i]
+            y_att = y_atts[i]
             if y != y_att:
                 fooled += 1
         print()

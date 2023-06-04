@@ -14,9 +14,14 @@ from src.training.density_sampling import DensitySampleTrainer
 from src.training.single_density_sampling import SingleDensitySampleTrainer
 from src.training.compression import CompressedDensitySampleTrainer
 
-def base_name_creator(args):
+def base_name_creator(args, transform_args):
     if args.single:
-        return f'single_{args.model_name}_{args.data_name}_{args.domain}_gamma{args.gamma}_B{args.B}_prune{args.prune}_kdefrac{args.kde_frac}_pca{args.pca}_{args.components}_resize{args.resize}_{args.size}_aug-num{args.aug_num}_latent{args.latent}_seed{args.seed}'
+        if args.dist_transform == 'tunity':
+            return f'single_{args.dist_transform}_thresh{transform_args.th}_{args.model_name}_{args.data_name}_{args.domain}_gamma{args.gamma}_B{args.B}_prune{args.prune}_kdefrac{args.kde_frac}_pca{args.pca}_{args.components}_resize{args.resize}_{args.size}_aug-num{args.aug_num}_latent{args.latent}_seed{args.seed}'
+        else:
+            return f'single_{args.dist_transform}_{args.model_name}_{args.data_name}_{args.domain}_gamma{args.gamma}_B{args.B}_prune{args.prune}_kdefrac{args.kde_frac}_pca{args.pca}_{args.components}_resize{args.resize}_{args.size}_aug-num{args.aug_num}_latent{args.latent}_seed{args.seed}'
+    
+    
     base_name = f'{args.model_name}_{args.data_name}_{args.domain}_aug{args.aug}_aug-sample{args.aug_sample}_gamma{args.gamma}_only-aug_{args.only_aug}_B{args.B}_prune{args.prune}_kdefrac{args.kde_frac}_pca{args.pca}_{args.components}_resize{args.resize}_{args.size}_aug-num{args.aug_num}_latent{args.latent}_seed{args.seed}'
     if args.adv:
         base_name = f'{args.model_name}_{args.data_name}_{args.domain}_adv{args.adv}_adv-sample{args.aug_sample}_B{args.B}_prune{args.prune}_kdefrac{args.kde_frac}_pca{args.pca}_{args.components}_resize{args.resize}_{args.size}_aug-num{args.aug_num}_seed{args.seed}'
@@ -54,10 +59,14 @@ if __name__ == "__main__":
     commandLineParser.add_argument('--size', type=int, default=32, help='size of resized image for KDE estimation')
     commandLineParser.add_argument('--latent', action='store_true', help='use latent representation to reweigh the samples')
     commandLineParser.add_argument('--single', action='store_true', help='single domain generalisation wo augmentation')
-    commandLineParser.add_argument('--dist_transform', type=str, default='unity', required=False, help='when single transformation for s(x)')
+    commandLineParser.add_argument('--dist_transform', type=str, default='unity', choices=['unity', 'tunity'], required=False, help='when single transformation for s(x)')
+
+    singleParser = argparse.ArgumentParser(description='parameters for single domain generalisation function transformation')
+    singleParser.add_argument('--th', type=float, default=0.01, help='Threshold for T-unity')
 
 
     args = commandLineParser.parse_args()
+    transform_args = singleParser.parse_args()
 
     set_seeds(args.seed)
 
@@ -67,7 +76,7 @@ if __name__ == "__main__":
     with open('CMDs/train.cmd', 'a') as f:
         f.write(' '.join(sys.argv)+'\n')
     
-    base_name = base_name_creator(args)
+    base_name = base_name_creator(args, transform_args)
 
     # Initialise logging
     if not os.path.isdir('LOGs'):
@@ -95,7 +104,7 @@ if __name__ == "__main__":
     if args.single:
         train_ds, val_ds = data_sel(args, train=True, adv=args.adv)
         trainer = SingleDensitySampleTrainer(train_ds, device, model, optimizer, criterion, scheduler, kde_frac = args.kde_frac, bandwidth=args.B)
-        train_dl = trainer.prep_weighted_dl(train_ds, dist_transform=args.dist_transform, gamma=args.gamma, bs=args.bs)        
+        train_dl = trainer.prep_weighted_dl(train_ds, dist_transform=args.dist_transform, gamma=args.gamma, bs=args.bs, transform_args=transform_args)        
         val_dl = torch.utils.data.DataLoader(val_ds, batch_size=args.bs, shuffle=False)
 
     elif args.aug_sample:

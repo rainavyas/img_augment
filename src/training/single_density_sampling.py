@@ -17,13 +17,13 @@ class SingleDensitySampleTrainer(Trainer):
         # Learn distribution for s(x)
         self.train_dist_model = Estimator.train_kde(train_ds, kernel=kernel, bandwidth=bandwidth, kde_frac=kde_frac)
     
-    def prep_weighted_dl(self, ds, dist_transform='unity', gamma=1.0, bs=64):
+    def prep_weighted_dl(self, ds, dist_transform='unity', gamma=1.0, bs=64, transform_args=None):
         '''
         Creates dl with samples drawn to create each batch randomly using weighting as defined by dist_transform on likelihoods
         '''
         print("Getting weights", datetime.now())
         train_weights = self.get_weights(self.train_dist_model, ds) # s(x)
-        transformed_weights = self.apply_transform(train_weights, dist_transform) # f(s(x)) = p(x), where p(x) is desired distribution
+        transformed_weights = self.apply_transform(train_weights, dist_transform, transform_args=transform_args) # f(s(x)) = p(x), where p(x) is desired distribution
         corrected_weights = transformed_weights / train_weights # p(x)/s(x) = w
         corrected_weights = corrected_weights**gamma # p(x)/s(x)**gamma
         print("Got weights", datetime.now())
@@ -43,10 +43,14 @@ class SingleDensitySampleTrainer(Trainer):
         return weights
     
     @staticmethod
-    def apply_transform(weights, dist_transform):
+    def apply_transform(weights, dist_transform, transform_args=None):
         '''
         Transform the weights as per specified transformation to obtain weights for desired distribution
         '''
         if dist_transform == 'unity':
             # equiprobable distribution
             return np.ones((len(weights)))
+        if dist_transform == 'tunity':
+            # thresholded unity
+            p = (weights>(transform_args.th/len(weights))).astype(int)
+            return p/np.sum(p)

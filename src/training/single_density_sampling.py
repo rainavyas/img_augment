@@ -53,4 +53,4 @@ class SingleDensitySampleTrainer(Trainer):
         if dist_transform == 'tunity':
             # thresholded unity
             p = (weights>(transform_args.th/len(weights))).astype(int)
-            return p/np.sum(p)
+            return p

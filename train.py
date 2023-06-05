@@ -65,9 +65,9 @@ if __name__ == "__main__":
     singleParser.add_argument('--th', type=float, default=0.01, help='Threshold for T-unity')
 
 
-    args = commandLineParser.parse_args()
-    transform_args = singleParser.parse_args()
-
+    args, a = commandLineParser.parse_known_args()
+    transform_args, t_a = singleParser.parse_known_args()
+    assert set(a).isdisjoint(t_a), f"{set(a)&set(t_a)}"
     set_seeds(args.seed)
 
     # Save the command run

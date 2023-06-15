@@ -1,0 +1,110 @@
+'''
+Standard single domain generalisation approaches with an option for our method,
+density flatten (df) method, applied on top.
+'''
+
+import torch
+import torch.nn as nn
+import sys
+import os, pdb
+import logging
+
+import argparse
+from datetime import datetime
+from src.tools.tools import get_default_device, set_seeds
+from src.models.model_selector import model_sel
+from src.data.data_selector import data_sel
+from src.training.trainer import Trainer
+from src.training.single_density_sampling import SingleDensitySampleTrainer
+
+
+def base_name_creator(args, dfargs):
+    base_name = f'{args.base_method}_{args.model_name}_{args.data_name}_{args.domain}_seed{args.seed}'
+    if dfargs.df:
+        base_name = 'df_' + base_name + f'B{dfargs.B}_gamma{dfargs.gamma}_kdefrac{dfargs.kde_frac}_transform{dfargs.transform}'
+        if dfargs.transform == 'tunity':
+            base_name += f'_th{dfargs.th}'
+    return base_name
+        
+if __name__ == "__main__":
+
+    # Get command line arguments
+    commandLineParser = argparse.ArgumentParser()
+    commandLineParser.add_argument('--out_dir', type=str, required=True, help='Specify dir to save model')
+    commandLineParser.add_argument('--model_name', type=str, required=True, help='e.g. vgg16')
+    commandLineParser.add_argument('--data_name', type=str, required=True, help='e.g. digits')
+    commandLineParser.add_argument('--data_dir_path', type=str, required=True, help='path to data directory, e.g. data')
+    commandLineParser.add_argument('--bs', type=int, default=64, help="Specify batch size")
+    commandLineParser.add_argument('--epochs', type=int, default=200, help="Specify max epochs")
+    commandLineParser.add_argument('--lr', type=float, default=0.001, help="Specify learning rate")
+    commandLineParser.add_argument('--momentum', type=float, default=0.9, help="Specify momentum")
+    commandLineParser.add_argument('--weight_decay', type=float, default=1e-4, help="Specify momentum")
+    commandLineParser.add_argument('--sch', type=int, default=[100, 150], nargs='+', help="Specify scheduler cycle")
+    commandLineParser.add_argument('--seed', type=int, default=1, help="Specify seed")
+    commandLineParser.add_argument('--force_cpu', action='store_true', help='force cpu use')
+    commandLineParser.add_argument('--domain', type=str, default='none', help="Specify source domain for DA dataset")
+    commandLineParser.add_argument('--base_method', type=str, default='erm', choices=['erm', 'augmix'], required=False, help='Baseline single domain generalisation method')
+
+    dfParser = argparse.ArgumentParser(description='density flattening (our) generalisation approach')
+    dfParser.add_argument('--df', action='store_true', help='apply density flattening')
+    dfParser.add_argument('--B', type=float, default=1.0, help="KDE bandwidth")
+    dfParser.add_argument('--gamma', type=float, default=1.0, help=" exponent when aug sample ")
+    dfParser.add_argument('--kde_frac', type=float, default=1.0, help="Specify frac of data to keep for training kde estimator")
+    dfParser.add_argument('--transform', type=str, default='unity', choices=['unity', 'tunity'], required=False, help=' Transformation for s(x)')
+    dfParser.add_argument('--th', type=float, default=0, help='Threshold for T-unity')
+
+
+    args, a = commandLineParser.parse_known_args()
+    dfargs, s_a = dfParser.parse_known_args()
+    assert set(a).isdisjoint(s_a), f"{set(a)&set(s_a)}"
+    set_seeds(args.seed)
+
+    # Save the command run
+    if not os.path.isdir('CMDs'):
+        os.mkdir('CMDs')
+    with open('CMDs/train_single.cmd', 'a') as f:
+        f.write(' '.join(sys.argv)+'\n')
+    
+    base_name = base_name_creator(args, dfargs)
+
+    # Initialise logging
+    if not os.path.isdir('LOGs'):
+        os.mkdir('LOGs')
+    fname = f'LOGs/{base_name}.log'
+    logging.basicConfig(filename=fname, filemode='w', level=logging.INFO, format='%(asctime)s - %(message)s')
+    logging.info('LOG created')
+
+    # Get the device
+    if args.force_cpu:
+        device = torch.device('cpu')
+    else:
+        device = get_default_device()
+
+    # Initialise model
+    model = model_sel(args.model_name)
+    model.to(device)
+
+    # Define learning objects
+    optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=args.sch)
+    criterion = nn.CrossEntropyLoss().to(device)
+    print("Current time: ", datetime.now())
+
+    # Load the training data and construct Trainer
+    if dfargs.df:
+        if args.base_method == 'erm':
+            train_ds, val_ds = data_sel(args, train=True)
+            trainer = SingleDensitySampleTrainer(train_ds, device, model, optimizer, criterion, scheduler, kde_frac = dfargs.kde_frac, bandwidth=dfargs.B)
+            train_dl = trainer.prep_weighted_dl(train_ds, dist_transform=dfargs.transform, gamma=dfargs.gamma, bs=args.bs, transform_args=dfargs)        
+            val_dl = torch.utils.data.DataLoader(val_ds, batch_size=args.bs, shuffle=False)
+
+    else:
+        if args.base_method == 'erm':
+            train_ds, val_ds = data_sel(args, train=True, adv=args.adv)
+            train_dl = torch.utils.data.DataLoader(train_ds, batch_size=args.bs, shuffle=True)
+            val_dl = torch.utils.data.DataLoader(val_ds, batch_size=args.bs, shuffle=False)
+            trainer = Trainer(device, model, optimizer, criterion, scheduler)
+
+    # Train
+    out_file = f'{args.out_dir}/{base_name}.th'
+    trainer.train_process(train_dl, val_dl, out_file, max_epochs=args.epochs)

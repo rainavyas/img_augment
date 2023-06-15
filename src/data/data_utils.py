@@ -2,8 +2,10 @@ import torch, os, pdb
 import numpy as np 
 import torchvision as tv
 import torchvision.transforms as transforms
+from torchvision import datasets
 from torch.utils.data import TensorDataset, ConcatDataset, Subset
 # from torch.utils.data import random_split
+import splitfolders
 from sklearn.model_selection import train_test_split
 
 aug_transform = transforms.Compose([
@@ -89,7 +91,7 @@ def train_selector(args, val=0.2, only_aug=False):
                 ds = ConcatDataset((full_ds, ds))
 
 
-    if args.data_name =='digits':
+    elif args.data_name =='digits':
         mnist_path = os.path.join(args.data_dir_path, 'MNIST')
         usps_path = os.path.join(args.data_dir_path, 'usps.bz2')
         svhn_path = os.path.join(args.data_dir_path, 'train_32x32.mat')
@@ -109,6 +111,31 @@ def train_selector(args, val=0.2, only_aug=False):
                 ds = full_ds
             else:
                 ds = ConcatDataset((full_ds, ds))
+
+    elif args.data_name == 'pacs':
+        split_pacs = os.path.join(args.data_dir_path, 'pacs_split')
+        art_dir = os.path.join(split_pacs, 'art')
+        cartoon_dir = os.path.join(split_pacs, 'cartoon')
+        photo_dir = os.path.join(split_pacs, 'photo')
+        sketch_dir = os.path.join(split_pacs, 'sketch')
+        if not os.path.isdir(split_pacs):
+            
+            os.makedirs(split_pacs)
+            orig =  os.path.join(args.data_dir_path,'pacs')
+            splitfolders.ratio(os.path.join(orig, 'art_painting'), output=art_dir, seed =1337, ratio=(0.85,0.15),group_prefix=None)
+            splitfolders.ratio(os.path.join(orig, 'cartoon'), output=cartoon_dir, seed =1337, ratio=(0.85,0.15),group_prefix=None)
+            splitfolders.ratio(os.path.join(orig, 'photo'), output=photo_dir, seed =1337, ratio=(0.85,0.15),group_prefix=None)
+            splitfolders.ratio(os.path.join(orig, 'sketch'), output=sketch_dir, seed =1337, ratio=(0.85,0.15),group_prefix=None)
+
+        if args.domain == 'art':
+            ds = datasets.ImageFolder(root = os.path.join(art_dir,'train'), transform = train_transform)
+        if args.domain == 'cartoon':
+            ds = datasets.ImageFolder(root = os.path.join(cartoon_dir,'train'), transform = train_transform)
+        if args.domain == 'photo':
+            ds = datasets.ImageFolder(root = os.path.join(photo_dir,'train'), transform = train_transform)
+        if args.domain == 'sketch':
+            ds = datasets.ImageFolder(root = os.path.join(sketch_dir,'train'), transform = train_transform)
+
 
     if args.prune > 0:
         subset_idx = torch.randperm(len(ds))[:int(args.prune*len(ds))]
@@ -195,3 +222,18 @@ def test_selector(args):
         if args.domain == 'usps': return tv.datasets.usps.USPS(args.data_dir_path, train=False, download=True, transform = grayscale_test_transform)
         if args.domain == 'svhn': return tv.datasets.svhn.SVHN(args.data_dir_path, split='test', download=True, transform = test_transform)
 
+    elif args.data_name == 'pacs':
+        split_pacs = os.path.join(args.data_dir_path, 'pacs_split')
+        art_dir = os.path.join(split_pacs, 'art')
+        cartoon_dir = os.path.join(split_pacs, 'cartoon')
+        photo_dir = os.path.join(split_pacs, 'photo')
+        sketch_dir = os.path.join(split_pacs, 'sketch')
+
+        if args.domain == 'art':
+            return datasets.ImageFolder(root = os.path.join(art_dir,'val'), transform = transforms_eval)
+        if args.domain == 'cartoon':
+            return datasets.ImageFolder(root = os.path.join(cartoon_dir,'val'), transform = transforms_eval)
+        if args.domain == 'photo':
+            return datasets.ImageFolder(root = os.path.join(photo_dir,'val'), transform = transforms_eval)
+        if args.domain == 'sketch':
+            return datasets.ImageFolder(root = os.path.join(sketch_dir,'val'), transform = transforms_eval)

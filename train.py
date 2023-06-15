@@ -61,7 +61,7 @@ if __name__ == "__main__":
     commandLineParser.add_argument('--single', action='store_true', help='single domain generalisation wo augmentation')
     commandLineParser.add_argument('--dist_transform', type=str, default='unity', choices=['unity', 'tunity'], required=False, help='when single transformation for s(x)')
 
-    singleParser = argparse.ArgumentParser(description='parameters for single domain generalisation function transformation')
+    singleParser = argparse.ArgumentParser(description='parameters for single domain generalisation')
     singleParser.add_argument('--th', type=float, default=0.01, help='Threshold for T-unity')
 
 

@@ -1,6 +1,27 @@
 '''
 Standard single domain generalisation approaches with an option for our method,
 density flatten (df) method, applied on top.
+
+Base Generalisation method integration with our df method
+
+1) ERM:        vanilla training.
+               df is applied to the training dataset to get weights for drawing training samples. weighted training.
+
+2) augmix: the full approach in the paper. 
+               Each orig sample is augmented to create: augmix1 and augmix2
+               Further, a Jensen-Shannon loss is added in training to 
+               enforce consistent predictions for orig, augmix1 and augmix2.
+
+               loss = CE(orig) + JSD_loss(orig, augmix1, augmix2)
+
+               We apply df to orig to get importance weights, w, and thus we draw orig
+               (and associated augmix1 and augmix2) as per these weights, to simulate the loss as:
+
+               loss = w*(CE(orig) + JSD_loss(orig, augmix1, augmix2))
+
+3) acvc:
+
+
 '''
 
 import torch
@@ -91,20 +112,28 @@ if __name__ == "__main__":
     print("Current time: ", datetime.now())
 
     # Load the training data and construct Trainer
-    if dfargs.df:
-        if args.base_method == 'erm':
-            train_ds, val_ds = data_sel(args, train=True)
+    train_ds, val_ds = data_sel(args, train=True)
+
+    if args.base_method == 'erm':
+        if dfargs.df:
             trainer = SingleDensitySampleTrainer(train_ds, device, model, optimizer, criterion, scheduler, kde_frac = dfargs.kde_frac, bandwidth=dfargs.B)
-            train_dl = trainer.prep_weighted_dl(train_ds, dist_transform=dfargs.transform, gamma=dfargs.gamma, bs=args.bs, transform_args=dfargs)        
-            val_dl = torch.utils.data.DataLoader(val_ds, batch_size=args.bs, shuffle=False)
-
-    else:
-        if args.base_method == 'erm':
-            train_ds, val_ds = data_sel(args, train=True, adv=args.adv)
-            train_dl = torch.utils.data.DataLoader(train_ds, batch_size=args.bs, shuffle=True)
-            val_dl = torch.utils.data.DataLoader(val_ds, batch_size=args.bs, shuffle=False)
+            train_dl = trainer.prep_weighted_dl(train_ds, dist_transform=dfargs.transform, gamma=dfargs.gamma, bs=args.bs, transform_args=dfargs)
+        else:
             trainer = Trainer(device, model, optimizer, criterion, scheduler)
+            train_dl = torch.utils.data.DataLoader(train_ds, batch_size=args.bs, shuffle=True)
+    
+    elif args.base_method == 'augmix':
+        trainer = AugMixTrainer(train_ds, device, model, optimizer, criterion, scheduler, df=dfargs.df, bandwidth=dfargs.B, kde_frac=dfargs.kde_frac)
+        aug_ds = trainer.augmix_ds(train_ds)
+        if dfargs.df:
+            train_dl = prep_weighted_dl(train_ds, aug_ds, dist_transform=dfargs.transform, gamma=dfargs.gamma, bs=args.bs, transform_args=dfargs)
+        else:
+            train_dl = torch.utils.data.DataLoader(aug_ds, batch_size=args.bs, shuffle=True)
+    
+    val_dl = torch.utils.data.DataLoader(val_ds, batch_size=args.bs, shuffle=False)
 
+
+            
     # Train
     out_file = f'{args.out_dir}/{base_name}.th'
     trainer.train_process(train_dl, val_dl, out_file, max_epochs=args.epochs)

@@ -78,17 +78,18 @@ grayscale_train_transform = transforms.Compose([
 def train_selector(args, val=0.2, only_aug=False):
     if args.data_name =='cifar10':
         ds = tv.datasets.CIFAR10(root=args.data_dir_path, train=True, transform= train_transform, download = True)
-        if args.aug == True:
-            for i in range(args.aug_num):
-                aug_ds = tv.datasets.CIFAR10(root=args.data_dir_path, train=True, transform = aug_transform, download=True)
-                if i == 0:
-                    full_ds = aug_ds
-                else: 
-                    full_ds = ConcatDataset((full_ds, aug_ds))
-            if only_aug:
-                ds = full_ds
-            else:
-                ds = ConcatDataset((full_ds, ds))
+        if hasattr(args, 'aug'):
+            if args.aug == True:
+                for i in range(args.aug_num):
+                    aug_ds = tv.datasets.CIFAR10(root=args.data_dir_path, train=True, transform = aug_transform, download=True)
+                    if i == 0:
+                        full_ds = aug_ds
+                    else: 
+                        full_ds = ConcatDataset((full_ds, aug_ds))
+                if only_aug:
+                    ds = full_ds
+                else:
+                    ds = ConcatDataset((full_ds, ds))
 
 
     elif args.data_name =='digits':
@@ -98,19 +99,20 @@ def train_selector(args, val=0.2, only_aug=False):
         if args.domain == 'mnist': ds = tv.datasets.mnist.MNIST(args.data_dir_path, train=True, download=True, transform = grayscale_train_transform)
         elif args.domain == 'svhn': ds = tv.datasets.svhn.SVHN(args.data_dir_path, split='train', download=True, transform = train_transform)
         elif args.domain == 'usps': ds = tv.datasets.usps.USPS(args.data_dir_path, train=True, download=True, transform = grayscale_train_transform)
-        if args.aug == True:
-            for i in range(args.aug_num):
-                if args.domain == 'mnist': aug_ds = tv.datasets.mnist.MNIST(args.data_dir_path, train=True, download=True, transform = grayscale_aug_transform)
-                elif args.domain == 'svhn': aug_ds = tv.datasets.svhn.SVHN(args.data_dir_path, split='train', download=True, transform = aug_transform)
-                elif args.domain == 'usps': aug_ds = tv.datasets.usps.USPS(args.data_dir_path, train=True, download=True, transform = grayscale_aug_transform)
-                if i == 0:
-                    full_ds = aug_ds
-                else: 
-                    full_ds = ConcatDataset((full_ds, aug_ds))
-            if only_aug:
-                ds = full_ds
-            else:
-                ds = ConcatDataset((full_ds, ds))
+        if hasattr(args, 'aug'):
+            if args.aug == True:
+                for i in range(args.aug_num):
+                    if args.domain == 'mnist': aug_ds = tv.datasets.mnist.MNIST(args.data_dir_path, train=True, download=True, transform = grayscale_aug_transform)
+                    elif args.domain == 'svhn': aug_ds = tv.datasets.svhn.SVHN(args.data_dir_path, split='train', download=True, transform = aug_transform)
+                    elif args.domain == 'usps': aug_ds = tv.datasets.usps.USPS(args.data_dir_path, train=True, download=True, transform = grayscale_aug_transform)
+                    if i == 0:
+                        full_ds = aug_ds
+                    else: 
+                        full_ds = ConcatDataset((full_ds, aug_ds))
+                if only_aug:
+                    ds = full_ds
+                else:
+                    ds = ConcatDataset((full_ds, ds))
 
     elif args.data_name == 'pacs':
         split_pacs = os.path.join(args.data_dir_path, 'pacs_split')
@@ -136,10 +138,10 @@ def train_selector(args, val=0.2, only_aug=False):
         if args.domain == 'sketch':
             ds = datasets.ImageFolder(root = os.path.join(sketch_dir,'train'), transform = train_transform)
 
-
-    if args.prune > 0:
-        subset_idx = torch.randperm(len(ds))[:int(args.prune*len(ds))]
-        ds = Subset(ds,subset_idx)
+    if hasattr(args, 'prune'):
+        if args.prune > 0:
+            subset_idx = torch.randperm(len(ds))[:int(args.prune*len(ds))]
+            ds = Subset(ds,subset_idx)
 
 
     num_val = int(val*len(ds))

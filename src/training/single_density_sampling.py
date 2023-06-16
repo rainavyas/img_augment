@@ -9,13 +9,14 @@ from tqdm import tqdm
 class SingleDensitySampleTrainer(Trainer):
     '''
     Use a training set to learn a density distribution
-    apply dist_transform to test set likelihoods to obtain weights for training
+    apply dist_transform to train set likelihoods to obtain weights for training
     '''
-    def __init__(self, train_ds, device, model, optimizer, criterion, scheduler, kernel='gaussian', bandwidth=1, kde_frac=1.0):
+    def __init__(self, train_ds, device, model, optimizer, criterion, scheduler, kernel='gaussian', bandwidth=1, kde_frac=1.0, df=True):
         super().__init__(device, model, optimizer, criterion, scheduler)
         
-        # Learn distribution for s(x)
-        self.train_dist_model = Estimator.train_kde(train_ds, kernel=kernel, bandwidth=bandwidth, kde_frac=kde_frac)
+        if df:
+            # Learn distribution for s(x)
+            self.train_dist_model = Estimator.train_kde(train_ds, kernel=kernel, bandwidth=bandwidth, kde_frac=kde_frac)
     
     def prep_weighted_dl(self, ds, dist_transform='unity', gamma=1.0, bs=64, transform_args=None):
         '''

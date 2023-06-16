@@ -10,11 +10,13 @@ Option to integrate with our df method
 
 from .single_denisty_sampling import SingleDensitySampleTrainer
 from .density_estimator import Estimator
-from torch.utils.data import DataLoader, WeightedRandomSampler
+from torch.utils.data import TensorDataset, DataLoader, WeightedRandomSampler
+
 from datetime import datetime
 import numpy as np
 import pdb
 from tqdm import tqdm
+from torchvisions.transforms import AugMix
 
 class AugMixTrainer(SingleDensitySampleTrainer):
     '''
@@ -24,6 +26,7 @@ class AugMixTrainer(SingleDensitySampleTrainer):
     def __init__(self, train_ds, device, model, optimizer, criterion, scheduler, df=False, kernel='gaussian', bandwidth=1, kde_frac=1.0):
         super().__init__(train_ds, device, model, optimizer, criterion, scheduler, kernel, bandwidth, kde_frac, df=df)
     
+    @staticmethod
     def augmix_ds(ds):
         '''
         input: ds (x,y)
@@ -31,6 +34,22 @@ class AugMixTrainer(SingleDensitySampleTrainer):
         
         order is maintained
         '''
+        transform = AugMix()
+        xs = []
+        aug1s = []
+        aug2s = []
+        ys = []
+        for i in range(len(all_corr_dset)):
+            x, y = ds[i]
+            aug1s.append(transform(x))
+            aug2.append(transform(x))
+            ys.append(y)
+            xs.append(x)
+        xs = torch.stack(xs, dim=0)
+        aug1s = torch.stack(aug1s, dim=0)
+        aug2s = torch.stack(aug2s, dim=0)
+        ys = torch.stack(ys, dim=0)
+        return TensorDataset(xs, aug1s, aug2s, ys)
     
     def prep_weighted_dl(self, orig_ds, aug_ds, dist_transform='unity', gamma=1.0, bs=64, transform_args=None):
         '''

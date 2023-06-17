@@ -45,7 +45,21 @@ class AverageMeter(object):
         
 def print_log(out_str):
     print(out_str)
-try:
-    logging.info(out_str)
-except:
-    pass
+    try:
+        logging.info(out_str)
+    except:
+        pass
+
+def get_ds_range(ds):
+        '''
+        return the biggest and smallest values per channel in a dataset
+        '''
+        xs = []
+        for i in range(len(ds)):
+            x, _ = ds[i]
+            xs.append(x)
+        xs = torch.stack(xs, dim=0) # [B x 3 x H x W]
+        xs_flat = torch.flatten(torch.transpose(xs, 0,1), start_dim=1) # [3 x B*H*W]
+        small = torch.min(xs_flat, dim=1)[0] # [3]
+        large = torch.max(xs_flat, dim=1)[0] # [3]
+        return small, large

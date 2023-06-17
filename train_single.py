@@ -7,12 +7,12 @@ Base Generalisation method integration with our df method
 1) ERM:        vanilla training.
                df is applied to the training dataset to get weights for drawing training samples. weighted training.
 
-2) augmix: the full approach in the paper. 
+2) augmix:     from the original paper... 
                Each orig sample is augmented to create: augmix1 and augmix2
                Further, a Jensen-Shannon loss is added in training to 
                enforce consistent predictions for orig, augmix1 and augmix2.
 
-               loss = CE(orig) + JSD_loss(orig, augmix1, augmix2)
+               loss = CE_loss(orig) + JSD_loss(orig, augmix1, augmix2)
 
                We apply df to orig to get importance weights, w, and thus we draw orig
                (and associated augmix1 and augmix2) as per these weights, to simulate the loss as:
@@ -27,7 +27,7 @@ Base Generalisation method integration with our df method
 import torch
 import torch.nn as nn
 import sys
-import os, pdb
+import os
 import logging
 
 import argparse
@@ -37,6 +37,7 @@ from src.models.model_selector import model_sel
 from src.data.data_selector import data_sel
 from src.training.trainer import Trainer
 from src.training.single_density_sampling import SingleDensitySampleTrainer
+from src.training.augmix import AugMixTrainer
 
 
 def base_name_creator(args, dfargs):
@@ -126,7 +127,7 @@ if __name__ == "__main__":
         trainer = AugMixTrainer(train_ds, device, model, optimizer, criterion, scheduler, df=dfargs.df, bandwidth=dfargs.B, kde_frac=dfargs.kde_frac)
         aug_ds = trainer.augmix_ds(train_ds)
         if dfargs.df:
-            train_dl = prep_weighted_dl(train_ds, aug_ds, dist_transform=dfargs.transform, gamma=dfargs.gamma, bs=args.bs, transform_args=dfargs)
+            train_dl = trainer.prep_weighted_dl(train_ds, aug_ds, dist_transform=dfargs.transform, gamma=dfargs.gamma, bs=args.bs, transform_args=dfargs)
         else:
             train_dl = torch.utils.data.DataLoader(aug_ds, batch_size=args.bs, shuffle=True)
     

@@ -15,7 +15,7 @@ from..tools.tools import AverageMeter, accuracy_topk, print_log, get_ds_range
 from datetime import datetime
 import torch
 # from torchvision.transforms import AugMix
-from src.data.augmix import AugMix
+from src.data.transforms import AugMix
 import torch.nn.functional as F
 from tqdm import tqdm
 

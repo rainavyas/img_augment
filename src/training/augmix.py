@@ -148,7 +148,7 @@ class AugMix2Trainer(AugMixTrainer):
         for i in range(len(augmix_ds)):
             x, aug1, aug2, y = augmix_ds[i]
             xs += [x, aug1, aug2]
-            ys.append(y)
+            ys += [y, y, y]
         xs = torch.stack(xs, dim=0)
         ys = torch.LongTensor(ys)
         return TensorDataset(xs, ys)

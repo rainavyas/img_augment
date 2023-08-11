@@ -26,7 +26,7 @@ class AugMixTrainer(SingleDensitySampleTrainer):
     apply dist_transform to train set likelihoods to obtain weights for training
     '''
     def __init__(self, train_ds, device, model, optimizer, criterion, scheduler, df=False, kernel='gaussian', bandwidth=1, kde_frac=1.0):
-        super().__init__(train_ds, device, model, optimizer, criterion, scheduler, kernel, bandwidth, kde_frac, df=df)
+        SingleDensitySampleTrainer.__init__(self, train_ds, device, model, optimizer, criterion, scheduler, kernel, bandwidth, kde_frac, df=df)
     
     @staticmethod
     def augmix_ds(ds):

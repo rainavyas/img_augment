@@ -140,7 +140,7 @@ if __name__ == "__main__":
             train_dl = torch.utils.data.DataLoader(aug_ds, batch_size=args.bs, shuffle=True)
 
     elif args.base_method == 'augmix2':
-        aug_ds = AugMix2Trainer.augmix_ds(train_ds)
+        aug_ds = AugMixTrainer.augmix_ds(train_ds)
         trainer = AugMix2Trainer(aug_ds, device, model, optimizer, criterion, scheduler, df=dfargs.df, bandwidth=dfargs.B, kde_frac=dfargs.kde_frac)
         if dfargs.df:
             train_dl = trainer.prep_weighted_dl(aug_ds, dist_transform=dfargs.transform, gamma=dfargs.gamma, bs=args.bs, transform_args=dfargs)

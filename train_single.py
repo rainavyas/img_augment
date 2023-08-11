@@ -19,6 +19,14 @@ Base Generalisation method integration with our df method
 
                loss = w*(CE(orig) + JSD_loss(orig, augmix1, augmix2))
 
+               here w = p(x_orig)/s(x_orig)
+
+3) augmix2:    As above, but w = p(x_orig, x_augmix1, x_augmix2)/s(x_orig, x_augmix1, x_augmix2)
+                where we will estimate that p(x_orig, x_augmix1, x_augmix2) = p(x_orig)*p(x_augmix1)*p(x_augmix2)
+                (and similarly for s(...))
+
+                Where we learn the distribution over the original dataset augmented with the augmix1 and augmix2 samples
+
 3) acvc:
 
 
@@ -37,7 +45,7 @@ from src.models.model_selector import model_sel
 from src.data.data_selector import data_sel
 from src.training.trainer import Trainer
 from src.training.single_density_sampling import SingleDensitySampleTrainer
-from src.training.augmix import AugMixTrainer
+from src.training.augmix import AugMixTrainer, AugMix2Trainer
 
 
 def base_name_creator(args, dfargs):
@@ -65,7 +73,7 @@ if __name__ == "__main__":
     commandLineParser.add_argument('--seed', type=int, default=1, help="Specify seed")
     commandLineParser.add_argument('--force_cpu', action='store_true', help='force cpu use')
     commandLineParser.add_argument('--domain', type=str, default='none', help="Specify source domain for DA dataset")
-    commandLineParser.add_argument('--base_method', type=str, default='erm', choices=['erm', 'augmix'], required=False, help='Baseline single domain generalisation method')
+    commandLineParser.add_argument('--base_method', type=str, default='erm', choices=['erm', 'augmix', 'augmix2'], required=False, help='Baseline single domain generalisation method')
 
     dfParser = argparse.ArgumentParser(description='density flattening (our) generalisation approach')
     dfParser.add_argument('--df', action='store_true', help='apply density flattening')
@@ -128,6 +136,14 @@ if __name__ == "__main__":
         aug_ds = trainer.augmix_ds(train_ds)
         if dfargs.df:
             train_dl = trainer.prep_weighted_dl(train_ds, aug_ds, dist_transform=dfargs.transform, gamma=dfargs.gamma, bs=args.bs, transform_args=dfargs)
+        else:
+            train_dl = torch.utils.data.DataLoader(aug_ds, batch_size=args.bs, shuffle=True)
+
+    elif args.base_method == 'augmix2':
+        aug_ds = AugMix2Trainer.augmix_ds(train_ds)
+        trainer = AugMix2Trainer(aug_ds, device, model, optimizer, criterion, scheduler, df=dfargs.df, bandwidth=dfargs.B, kde_frac=dfargs.kde_frac)
+        if dfargs.df:
+            train_dl = trainer.prep_weighted_dl(aug_ds, dist_transform=dfargs.transform, gamma=dfargs.gamma, bs=args.bs, transform_args=dfargs)
         else:
             train_dl = torch.utils.data.DataLoader(aug_ds, batch_size=args.bs, shuffle=True)
     

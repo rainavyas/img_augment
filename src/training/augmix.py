@@ -18,6 +18,7 @@ import torch
 from src.data.transforms import AugMix
 import torch.nn.functional as F
 from tqdm import tqdm
+import numpy as np
 
 class AugMixTrainer(SingleDensitySampleTrainer):
     '''
@@ -126,5 +127,51 @@ class AugMixTrainer(SingleDensitySampleTrainer):
                 print_log(f'Epoch: [{epoch}][{i}/{len(train_loader)}]\tLoss {losses.val:.4f} ({losses.avg:.4f})\tAccuracy {accs.val:.3f} ({accs.avg:.3f})')
     
 
+class AugMix2Trainer(SingleDensitySampleTrainer):
+    '''
+    Use a training set to learn a density distribution
+    apply dist_transform to augmix train set likelihoods to obtain weights for training
+    '''
+    def __init__(self, augmix_ds, device, model, optimizer, criterion, scheduler, df=False, kernel='gaussian', bandwidth=1, kde_frac=1.0):
+        SingleDensitySampleTrainer.__init__(self, self.flatten_augmix_ds(augmix_ds), device, model, optimizer, criterion, scheduler, kernel, bandwidth, kde_frac, df=df)
 
+    
+    @staticmethod
+    def flatten_augmix_ds(augmix_ds):
+        '''
+        Input: each sample in augmix_ds is (x, augmix1, augmix2, y)
+        Output: each above sample becomes 3 samples: (x, y), (augmix1, y), (augmix2, y)
+        '''
+
+        xs = []
+        ys = []
+        for i in range(len(augmix_ds)):
+            x, aug1, aug2, y = augmix_ds[i]
+            xs += [x, aug1, aug2]
+            ys.append(y)
+        xs = torch.stack(xs, dim=0)
+        ys = torch.LongTensor(ys, dim=0)
+        return TensorDataset(xs, ys)
+
+    def prep_weighted_dl(self, aug_ds, dist_transform='unity', gamma=1.0, bs=64, transform_args=None):
+        '''
+        Creates dl with samples drawn to create each batch randomly using weighting as defined by dist_transform on likelihoods
+        '''
+        print("Getting weights", datetime.now())
+        tw = self.get_weights(self.train_dist_model, self.flatten_augmix_ds(aug_ds)) # s(x)
+        
+        # unflatten weights and multiply: p(x)*p(aug1)*p(aug2)
+        tw_splits = [split.squeeze() for split in np.vsplit(np.expand_dims(tw, axis=1), len(aug_ds))]
+        train_weights = np.asarray([split[0]*split[1]*split[2] for split in tw_splits])
+        breakpoint()
+
+        transformed_weights = self.apply_transform(train_weights, dist_transform, transform_args=transform_args) # f(s(x)) = p(x), where p(x) is desired distribution
+        corrected_weights = transformed_weights / train_weights # p(x)/s(x) = w
+        corrected_weights = corrected_weights**gamma # p(x)/s(x)**gamma
+        print("Got weights", datetime.now())
+        sampler = WeightedRandomSampler(corrected_weights, len(aug_ds), replacement=True)
+        print("Done init sampler, creating dl", datetime.now())
+        dl = DataLoader(aug_ds, batch_size=bs, sampler=sampler)
+        print("created dl", datetime.now())
+        return dl
     

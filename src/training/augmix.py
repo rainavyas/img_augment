@@ -150,7 +150,7 @@ class AugMix2Trainer(AugMixTrainer):
             xs += [x, aug1, aug2]
             ys.append(y)
         xs = torch.stack(xs, dim=0)
-        ys = torch.LongTensor(ys, dim=0)
+        ys = torch.LongTensor(ys)
         return TensorDataset(xs, ys)
 
     def prep_weighted_dl(self, aug_ds, dist_transform='unity', gamma=1.0, bs=64, transform_args=None):

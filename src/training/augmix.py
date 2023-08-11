@@ -164,7 +164,6 @@ class AugMix2Trainer(AugMixTrainer):
         tw_splits = [split.squeeze() for split in np.vsplit(np.expand_dims(tw, axis=1), len(aug_ds))]
         train_weights = np.asarray([split[0]*split[1]*split[2] for split in tw_splits])
         train_weights = train_weights/np.sum(train_weights) # normalize
-        breakpoint()
 
         transformed_weights = self.apply_transform(train_weights, dist_transform, transform_args=transform_args) # f(s(x)) = p(x), where p(x) is desired distribution
         corrected_weights = transformed_weights / train_weights # p(x)/s(x) = w

@@ -127,13 +127,13 @@ class AugMixTrainer(SingleDensitySampleTrainer):
                 print_log(f'Epoch: [{epoch}][{i}/{len(train_loader)}]\tLoss {losses.val:.4f} ({losses.avg:.4f})\tAccuracy {accs.val:.3f} ({accs.avg:.3f})')
     
 
-class AugMix2Trainer(SingleDensitySampleTrainer):
+class AugMix2Trainer(AugMixTrainer):
     '''
     Use a training set to learn a density distribution
     apply dist_transform to augmix train set likelihoods to obtain weights for training
     '''
     def __init__(self, augmix_ds, device, model, optimizer, criterion, scheduler, df=False, kernel='gaussian', bandwidth=1, kde_frac=1.0):
-        SingleDensitySampleTrainer.__init__(self, self.flatten_augmix_ds(augmix_ds), device, model, optimizer, criterion, scheduler, kernel, bandwidth, kde_frac, df=df)
+        AugMixTrainer.__init__(self, self.flatten_augmix_ds(augmix_ds), device, model, optimizer, criterion, scheduler, kernel, bandwidth, kde_frac, df=df)
 
     
     @staticmethod

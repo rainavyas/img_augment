@@ -157,6 +157,7 @@ class AugMix2Trainer(AugMixTrainer):
         '''
         Creates dl with samples drawn to create each batch randomly using weighting as defined by dist_transform on likelihoods
         '''
+        import pdb; pdb.set_trace()
         print("Getting weights", datetime.now())
         tw = self.get_weights(self.train_dist_model, self.flatten_augmix_ds(aug_ds)) # s(x)
         

@@ -74,7 +74,7 @@ if __name__ == "__main__":
     commandLineParser.add_argument('--seed', type=int, default=1, help="Specify seed")
     commandLineParser.add_argument('--force_cpu', action='store_true', help='force cpu use')
     commandLineParser.add_argument('--domain', type=str, default='none', help="Specify source domain for DA dataset")
-    commandLineParser.add_argument('--base_method', type=str, default='erm', choices=['erm', 'augmix', 'augmix2, augmix3'], required=False, help='Baseline single domain generalisation method')
+    commandLineParser.add_argument('--base_method', type=str, default='erm', choices=['erm', 'augmix', 'augmix2', 'augmix3'], required=False, help='Baseline single domain generalisation method')
 
     dfParser = argparse.ArgumentParser(description='density flattening (our) generalisation approach')
     dfParser.add_argument('--df', action='store_true', help='apply density flattening')

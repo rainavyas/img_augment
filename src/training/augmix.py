@@ -153,7 +153,7 @@ class AugMix2Trainer(AugMixTrainer):
         ys = torch.LongTensor(ys)
         return TensorDataset(xs, ys)
 
-    def prep_weighted_dl(self, aug_ds, dist_transform='unity', gamma=1.0, bs=64, transform_args=None):
+    def prep_weighted_dl(self, aug_ds, dist_transform='unity', gamma=1.0, bs=64, transform_args=None, add=False):
         '''
         Creates dl with samples drawn to create each batch randomly using weighting as defined by dist_transform on likelihoods
         '''
@@ -162,7 +162,10 @@ class AugMix2Trainer(AugMixTrainer):
         
         # unflatten weights and multiply: p(x)*p(aug1)*p(aug2)
         tw_splits = [split.squeeze() for split in np.vsplit(np.expand_dims(tw, axis=1), len(aug_ds))]
-        train_weights = np.asarray([split[0]*split[1]*split[2] for split in tw_splits])
+        if add:
+            train_weights = np.asarray([split[0]+split[1]+split[2] for split in tw_splits])
+        else:
+            train_weights = np.asarray([split[0]*split[1]*split[2] for split in tw_splits])
         train_weights = train_weights/np.sum(train_weights) # normalize
 
         transformed_weights = self.apply_transform(train_weights, dist_transform, transform_args=transform_args) # f(s(x)) = p(x), where p(x) is desired distribution
@@ -174,4 +177,3 @@ class AugMix2Trainer(AugMixTrainer):
         dl = DataLoader(aug_ds, batch_size=bs, sampler=sampler)
         print("created dl", datetime.now())
         return dl
-    

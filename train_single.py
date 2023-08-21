@@ -81,8 +81,8 @@ if __name__ == "__main__":
     dfParser.add_argument('--B', type=float, default=1.0, help="KDE bandwidth")
     dfParser.add_argument('--gamma', type=float, default=1.0, help=" exponent when aug sample ")
     dfParser.add_argument('--kde_frac', type=float, default=1.0, help="Specify frac of data to keep for training kde estimator")
-    dfParser.add_argument('--transform', type=str, default='unity', choices=['unity', 'tunity'], required=False, help=' Transformation for s(x)')
-    dfParser.add_argument('--th', type=float, default=0, help='Threshold for T-unity')
+    dfParser.add_argument('--transform', type=str, default='unity', choices=['unity', 'tunity', 'triangle'], required=False, help=' Transformation for s(x)')
+    dfParser.add_argument('--th', type=float, default=0, help='Threshold for T-unity and Triangle')
 
 
     args, a = commandLineParser.parse_known_args()

@@ -55,3 +55,9 @@ class SingleDensitySampleTrainer(Trainer):
             # thresholded unity
             p = (weights>(transform_args.th/len(weights))).astype(int)
             return p
+
+        if dist_transform == "triangle":
+            # traingle unity
+            th = transform_args.th/len(weights)
+            p = np.clip(weights/th, a_min=0, a_max=1)
+            return p

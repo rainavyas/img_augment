@@ -53,7 +53,7 @@ def base_name_creator(args, dfargs):
     base_name = f'{args.base_method}_{args.model_name}_{args.data_name}_{args.domain}_seed{args.seed}'
     if dfargs.df:
         base_name = 'df_' + base_name + f'B{dfargs.B}_gamma{dfargs.gamma}_kdefrac{dfargs.kde_frac}_transform{dfargs.transform}'
-        if dfargs.transform == 'tunity':
+        if dfargs.transform == 'tunity' or dfargs.transform == 'triangle' :
             base_name += f'_th{dfargs.th}'
     return base_name
         

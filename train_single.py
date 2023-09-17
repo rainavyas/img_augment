@@ -27,8 +27,8 @@ Base Generalisation method integration with our df method
 
                 Where we learn the distribution over the original dataset augmented with the augmix1 and augmix2 samples
 
-4) augmix3:    
-3) acvc:
+4) augmix3:    As with augmix2 but use addition instead of multiplication
+3) acvc:        As with augmix3 but different augmentation method and different loss function
 
 
 '''
@@ -74,7 +74,7 @@ if __name__ == "__main__":
     commandLineParser.add_argument('--seed', type=int, default=1, help="Specify seed")
     commandLineParser.add_argument('--force_cpu', action='store_true', help='force cpu use')
     commandLineParser.add_argument('--domain', type=str, default='none', help="Specify source domain for DA dataset")
-    commandLineParser.add_argument('--base_method', type=str, default='erm', choices=['erm', 'augmix', 'augmix2', 'augmix3'], required=False, help='Baseline single domain generalisation method')
+    commandLineParser.add_argument('--base_method', type=str, default='erm', choices=['erm', 'augmix', 'augmix2', 'augmix3', 'acvc'], required=False, help='Baseline single domain generalisation method')
 
     dfParser = argparse.ArgumentParser(description='density flattening (our) generalisation approach')
     dfParser.add_argument('--df', action='store_true', help='apply density flattening')
@@ -148,6 +148,14 @@ if __name__ == "__main__":
         else:
             train_dl = torch.utils.data.DataLoader(aug_ds, batch_size=args.bs, shuffle=True)
     
+    elif args.base_method == 'acvc':
+        aug_ds = ACVCTrainer.aug_ds(train_ds)
+        trainer = ACVCTrainer(aug_ds, device, model, optimizer, criterion, scheduler, df=dfargs.df, bandwidth=dfargs.B, kde_frac=dfargs.kde_frac)
+        if dfargs.df:
+            train_dl = trainer.prep_weighted_dl(aug_ds, dist_transform=dfargs.transform, gamma=dfargs.gamma, bs=args.bs, transform_args=dfargs, add = (args.base_method == 'augmix3') )
+        else:
+            train_dl = torch.utils.data.DataLoader(aug_ds, batch_size=args.bs, shuffle=True)
+
     val_dl = torch.utils.data.DataLoader(val_ds, batch_size=args.bs, shuffle=False)
 
 

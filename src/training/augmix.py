@@ -160,7 +160,7 @@ class AugMix2Trainer(AugMixTrainer):
         print("Getting weights", datetime.now())
         tw = self.get_weights(self.train_dist_model, self.flatten_augmix_ds(aug_ds)) # s(x)
         
-        # unflatten weights and multiply: p(x)*p(aug1)*p(aug2)
+        # unflatten weights and multiply: p(x)*p(aug1)*p(aug2) (or add)
         tw_splits = [split.squeeze() for split in np.vsplit(np.expand_dims(tw, axis=1), len(aug_ds))]
         if add:
             train_weights = np.asarray([split[0]+split[1]+split[2] for split in tw_splits])

@@ -15,6 +15,7 @@ import numpy as np
 from tqdm import tqdm
 from imagecorruptions import corrupt, get_corruption_names
 from torch import nn
+import torch.nn.functional as F
 from torch.autograd import Variable
 from datetime import datetime
 
@@ -158,6 +159,9 @@ class ACVCGenerator:
             Return visually corrupted x
             x: Torch.Tensor[3 x w x h] with pixel values in the range 0-255
         '''
+
+        if x.shape[-1] < 32:
+            x = F.interpolate(x, size=[32,32])
         return torch.from_numpy(cls.acvc(x.numpy()))
 
 

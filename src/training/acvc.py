@@ -162,8 +162,11 @@ class ACVCGenerator:
 
         if x.shape[-1] < 32:
             x = F.interpolate(x.unsqueeze(dim=0), size=[32,32]).squeeze()
-        breakpoint()
-        return torch.from_numpy(cls.acvc(x.numpy()))
+        
+        x = torch.transpose(x,0,2)
+        out = torch.from_numpy(cls.acvc(x.numpy()))
+        out = out.transpose(out,0,2)
+        return F.interpolate(out.unsqueeze(dim=0), size=[16,16]).squeeze()
 
 
     @staticmethod

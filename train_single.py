@@ -47,6 +47,7 @@ from src.data.data_selector import data_sel
 from src.training.trainer import Trainer
 from src.training.single_density_sampling import SingleDensitySampleTrainer
 from src.training.augmix import AugMixTrainer, AugMix2Trainer
+from src.training.acvc import ACVCTrainer
 
 
 def base_name_creator(args, dfargs):

@@ -165,7 +165,7 @@ class ACVCGenerator:
         
         x = torch.transpose(x,0,2)
         out = torch.from_numpy(cls.acvc(x.numpy()))
-        out = out.transpose(out,0,2)
+        out = torch.transpose(out,0,2)
         return F.interpolate(out.unsqueeze(dim=0), size=[16,16]).squeeze()
 
 

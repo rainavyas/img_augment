@@ -123,7 +123,7 @@ class ACVCTrainer(SingleDensitySampleTrainer):
         Creates dl with samples drawn to create each batch randomly using weighting as defined by dist_transform on likelihoods
         '''
         print("Getting weights", datetime.now())
-        tw = self.get_weights(self.train_dist_model, self.flatten_augmix_ds(aug_ds)) # s(x)
+        tw = self.get_weights(self.train_dist_model, self.flatten_aug_ds(aug_ds)) # s(x)
         
         # unflatten weights and add: p(x)+p(aug)
         tw_splits = [split.squeeze() for split in np.vsplit(np.expand_dims(tw, axis=1), len(aug_ds))]

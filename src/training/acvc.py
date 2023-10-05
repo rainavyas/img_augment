@@ -96,8 +96,8 @@ class ACVCTrainer(SingleDensitySampleTrainer):
             loss_classification = criterion(logits_clean, y) + criterion(logits_aug, y)
 
             # 'contrastive loss' - in this case the ACVC loss
-            c_clean = get_cam_pred(model, (x, y))
-            c_aug = get_cam_pred(model, (x_aug, y))
+            c_clean = get_cam_pred(model, x)
+            c_aug = get_cam_pred(model, x_aug)
 
             acvc_loss_calculator = AttentionConsistency()
             loss_acvc = acvc_loss_calculator(c_clean, [c_aug], y)

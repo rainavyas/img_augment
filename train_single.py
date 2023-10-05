@@ -153,7 +153,7 @@ if __name__ == "__main__":
         aug_ds = ACVCTrainer.aug_ds(train_ds)
         trainer = ACVCTrainer(aug_ds, device, model, optimizer, criterion, scheduler, df=dfargs.df, bandwidth=dfargs.B, kde_frac=dfargs.kde_frac)
         if dfargs.df:
-            train_dl = trainer.prep_weighted_dl(aug_ds, dist_transform=dfargs.transform, gamma=dfargs.gamma, bs=args.bs, transform_args=dfargs, add = (args.base_method == 'augmix3') )
+            train_dl = trainer.prep_weighted_dl(aug_ds, dist_transform=dfargs.transform, gamma=dfargs.gamma, bs=args.bs, transform_args=dfargs)
         else:
             train_dl = torch.utils.data.DataLoader(aug_ds, batch_size=args.bs, shuffle=True)
 
